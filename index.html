@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BarnacleAI • Computer Vision Research</title>
+<meta name="description" content="Explore barnacle counts, image features, annotation uncertainty, and manually validated sampling estimates. DALI Data Challenge 26F.">
+<style>
+:root{color-scheme:dark;--bg:#08141c;--panel:#10232c;--line:#25434c;--light:#edf8f7;--muted:#a3bdc2;--mint:#5ee6bf;--amber:#ffcb84}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#133842 0,transparent 37%),var(--bg);color:var(--light);font:15px/1.55 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--mint)}header{border-bottom:1px solid var(--line);padding:16px max(20px,calc((100vw - 1220px)/2));display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.brand{font-weight:850;letter-spacing:-.6px;font-size:22px}.brand span{color:var(--mint)}nav{display:flex;gap:18px}nav a{font-size:13px;color:var(--muted);text-decoration:none}
+main{max-width:1220px;padding:30px 20px 70px;margin:auto}.eyebrow{color:var(--mint);text-transform:uppercase;letter-spacing:2.5px;font-size:11px;font-weight:800}
+.hero{padding:28px 2px 30px}h1{font-size:clamp(40px,6vw,75px);letter-spacing:-3.7px;line-height:1.03;margin:12px 0 16px;font-weight:850}
+.hero p{color:var(--muted);max-width:710px;font-size:17px;margin:0}.pill{display:inline-block;margin:18px 9px 0 0;padding:5px 11px;border:1px solid #315359;border-radius:99px;color:#b6d5d5;font-size:12px}
+.section-title{font-size:19px;letter-spacing:-.4px;font-weight:800;margin:0 0 13px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.card,.panel{background:linear-gradient(135deg,#112833,#0e2029);border:1px solid var(--line);border-radius:15px;padding:20px}
+.stat{font-size:34px;letter-spacing:-1px;font-weight:850;color:#f5fffc;margin:4px 0}.label{color:var(--muted);font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.two{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}.control{border:1px dashed #41636a;padding:17px;border-radius:12px;margin:15px 0;background:#10282f}
+input[type=file]{display:block;max-width:100%;margin:8px 0 5px;color:#bfe0d9}button,.button{background:var(--mint);color:#05241d;padding:10px 16px;border:0;border-radius:9px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block}
+button.secondary,.button.secondary{background:#1b3c44;color:#e8fffb;border:1px solid #38666a}
+button:disabled{opacity:.55;cursor:not-allowed}.mini{font-size:12px;color:var(--muted)}
+canvas{max-width:100%;border-radius:11px;background:#06151c}.viewer{width:100%;max-height:520px;object-fit:contain;border:1px solid var(--line)}
+.prog{height:7px;background:#163039;border-radius:7px;overflow:hidden}.prog div{height:100%;background:var(--mint);transition:width .3s}
+.warn{padding:12px 14px;border:1px solid #705a40;background:#30291d;border-radius:10px;color:#ffdba2;font-size:13px;margin:15px 0}
+.good{padding:12px 14px;border:1px solid #31715b;background:#103529;border-radius:10px;color:#b6fce4;font-size:13px;margin:15px 0}
+.metricrow{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0}.metricrow strong{display:block;font-size:24px}.metricrow div{min-width:105px}
+h2{font-size:22px;margin:34px 0 15px}h3{margin:4px 0 10px;font-size:17px}
+.samplebox{max-height:280px;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.sample{padding:10px;background:#122c34;border:1px solid #27505b;border-radius:8px;display:grid;gap:5px}.sample input{width:100%;background:#061821;border:1px solid #42626b;color:white;border-radius:7px;padding:8px;font:inherit}
+kbd{font-size:11px;color:var(--mint)}footer{margin-top:40px;border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:12px}
+@media(max-width:900px){.two,.grid{grid-template-columns:1fr}h1{letter-spacing:-2px}main{padding-top:20px}}
+</style>
+</head>
+<body>
+<header><div class="brand">🐚 Barnacle<span>AI</span></div><nav><a href="#explore">Explore</a><a href="#research">Research results</a><a href="#validation">Validation</a><a href="https://github.com/jerelclark2-bit/Barnacle-A.I" target="_blank" rel="noopener">GitHub ↗</a></nav></header>
+<main>
+<section class="hero"><div class="eyebrow">Dartmouth · DALI 26F data challenge · research prototype</div>
+<h1>Count less.<br><span style="color:var(--mint)">Understand more.</span></h1>
+<p>Explore the image features behind barnacle counting, visualize candidate detections, and estimate uncertainty from independent human review. The trained PyTorch CNN is a separate Python model; this lightweight browser demo uses an explicitly labeled image-processing heuristic.</p>
+<div><span class="pill">PyTorch CNN experiment</span><span class="pill">COSC 3 feature engineering</span><span class="pill">Human-in-the-loop</span><span class="pill">Transparent uncertainty</span></div>
+</section>
+<section id="research"><div class="grid">
+<div class="card"><div class="label">Retrained CNN candidates on held-out photo</div><div class="stat">1,104</div><div class="mini">Not a verified biological count</div></div>
+<div class="card"><div class="label">CNN MAE per evaluation tile</div><div class="stat">12.57</div><div class="mini">Compared with incomplete blue labels</div></div>
+<div class="card"><div class="label">Feature-based Ridge MAE per tile</div><div class="stat">14.85</div><div class="mini">Same annotation-derived benchmark</div></div>
+</div></section>
+<section id="explore"><div class="row"><h2>Interactive image laboratory</h2><span class="mini">All uploaded images remain in your browser</span></div>
+<div class="two">
+<div class="panel"><h3>01 · Inspect an image</h3><p class="mini">Choose an image already cropped to the <b>inner green square</b>. Barnacles touching a tile boundary are counted by their estimated centers.</p>
+<div class="control"><label for="upload">Upload a barnacle photograph (JPG / PNG)</label><input type="file" id="upload" accept="image/png,image/jpeg"><div class="mini">The browser runs a simple edge-peak heuristic for interactive exploration, not the trained CNN.</div></div>
+<canvas id="photo" class="viewer" width="800" height="500" aria-label="Barnacle analysis image"></canvas>
+<div class="row" style="margin-top:13px"><button id="analyze" disabled>Run exploratory detection</button><label class="mini">Sensitivity <input id="sensitivity" type="range" min="30" max="130" value="73" style="vertical-align:middle"> <span id="slabel">73</span></label></div>
+<div class="warn">⚠️ This web demo's point detector is an <b>untrained visual heuristic</b>. Its detections are not the saved PyTorch CNN's predictions. For trained-model inference use the Python app in the source project.</div>
+</div>
+<div class="panel"><h3>02 · COSC 3 image features</h3><div class="metricrow">
+<div><span class="label">Brightness density</span><strong id="density">—</strong></div>
+<div><span class="label">Horizontal center</span><strong id="cx">—</strong></div>
+<div><span class="label">Symmetry</span><strong id="sym">—</strong></div>
+<div><span class="label">Left-right balance</span><strong id="bal">—</strong></div></div>
+<div class="prog"><div id="progress" style="width:0"></div></div>
+<div class="metricrow"><div><span class="label">Heuristic candidate points</span><strong id="count">—</strong></div><div><span class="label">Image dimensions</span><strong id="dims">—</strong></div></div>
+<h3>03 · Spatial distribution</h3><canvas id="scatter" width="500" height="300"></canvas><p class="mini">Experimental 3D projection: x/y are image coordinates; height represents local candidate density. This is not confidence or a prediction interval.</p>
+</div>
+</div></section>
+<section id="validation"><h2>Human verification & sampling interval</h2><div class="panel"><p>After uploading an image, review twelve reproducibly selected tiles from an 8 × 8 grid. Enter your <b>manual count</b> for each tile. The tool can then estimate the total count and an approximate 95% sampling interval using the finite-population correction. This interval is not a neural-network confidence score.</p>
+<div id="tileinputs" class="samplebox"><p class="mini">Upload an image to prepare review tiles.</p></div>
+<div class="row" style="margin-top:16px"><button id="estimate" disabled>Calculate 95% sampling interval</button><button id="export" class="secondary" disabled>Export review CSV</button></div>
+<div id="interval" class="warn">Waiting for manual counts. We will not invent an interval before independent verification.</div></div></section>
+<section><h2>How the full Python system works</h2><div class="grid">
+<div class="card"><div class="eyebrow">Model A</div><h3>Deep learning</h3><p class="mini">A small PyTorch CNN predicts barnacle-center heatmaps, then converts local peaks into candidates. Trained on imperfect contour labels from one photograph.</p></div>
+<div class="card"><div class="eyebrow">Model B</div><h3>Ridge regression</h3><p class="mini">Image tiles are represented with brightness, centroid, symmetry, balance, edge density, and texture features, then regressed onto annotation-derived counts.</p></div>
+<div class="card"><div class="eyebrow">Human judgment</div><h3>Correct & verify</h3><p class="mini">Review problematic tiles and compute sampling-based uncertainty with human counts. Labels remain incomplete; the trained model has not yet been biologically validated.</p></div></div>
+<div class="good"><b>Reproducibility matters.</b> The model comparison, trained checkpoints and full Streamlit/FastAPI application are in the separately packaged Python project. This browser-only demonstration does not substitute for deploying that backend.</div>
+</section>
+<footer>BarnacleAI · Dartmouth DALI 26F · Experimental academic prototype. Outputs are not ecological measurements. <a href="https://github.com/jerelclark2-bit/Barnacle-A.I">Source repository</a>.</footer>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const c=$("photo"),ctx=c.getContext("2d",{willReadFrequently:true}),plot=$("scatter").getContext("2d"),N=64,n=12;
+let rgba=null,W=0,H=0,pts=[],review=[];
+function placeholder(){ctx.fillStyle="#0a1c24";ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle="#82a9b0";ctx.font="18px system-ui";ctx.textAlign="center";ctx.fillText("Upload a cropped barnacle photograph to begin",c.width/2,c.height/2);ctx.textAlign="start";}
+placeholder();
+$("sensitivity").addEventListener("input",()=>{$("slabel").textContent=$("sensitivity").value});
+$("upload").addEventListener("change",async e=>{
+ const f=e.target.files&&e.target.files[0];if(!f)return;
+ if(f.size>16000000){alert("Please choose a file under 16 MB.");return}
+ const url=URL.createObjectURL(f),im=new Image();
+ im.onload=()=>{
+  const s=Math.min(1,1250/Math.max(im.width,im.height));W=Math.max(1,Math.round(im.width*s));H=Math.max(1,Math.round(im.height*s));
+  c.width=W;c.height=H;ctx.drawImage(im,0,0,W,H);rgba=ctx.getImageData(0,0,W,H).data;
+  pts=[];draw();features();makeReview();$("analyze").disabled=false;$("estimate").disabled=false;$("export").disabled=false;
+  $("dims").textContent=W+"×"+H;$("count").textContent="—";$("progress").style.width="30%";
+  URL.revokeObjectURL(url);
+ };
+ im.onerror=()=>{URL.revokeObjectURL(url);alert("Could not read image.")};im.src=url;
+});
+function grayAt(x,y){const i=4*(y*W+x);return(.2126*rgba[i]+.7152*rgba[i+1]+.0722*rgba[i+2])/255;}
+function features(){
+ if(!rgba)return;
+ let mass=0,xmass=0,left=0,right=0,mirror=0;
+ const step=Math.max(1,Math.round(Math.max(W,H)/450));
+ for(let y=0;y<H;y+=step)for(let x=0;x<W;x+=step){const g=grayAt(x,y);mass+=g;xmass+=g*x/(W-1);if(x<W/2)left+=g;else right+=g;mirror+=Math.abs(g-grayAt(W-1-x,y))}
+ let area=Math.ceil(W/step)*Math.ceil(H/step);
+ $("density").textContent=(mass/area).toFixed(3);$("cx").textContent=(xmass/(mass||1)).toFixed(3);
+ $("sym").textContent=(1-mirror/(2*(mass||1))).toFixed(3);
+ $("bal").textContent=((left-right)/(left+right||1)).toFixed(3);
+}
+function draw(){
+ if(!rgba)return;ctx.putImageData(new ImageData(new Uint8ClampedArray(rgba),W,H),0,0);
+ ctx.strokeStyle="#67f2be";ctx.lineWidth=1.3;
+ for(const p of pts){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.stroke()}
+}
+$("analyze").onclick=()=>{
+ if(!rgba)return;
+ const stride=6,r=4,threshold=Number($("sensitivity").value)/1000;
+ let candidates=[];
+ for(let y=r+2;y<H-r-2;y+=stride)for(let x=r+2;x<W-r-2;x+=stride){
+  const z=grayAt(x,y),dx=Math.abs(grayAt(x-r,y)-grayAt(x+r,y)),dy=Math.abs(grayAt(x,y-r)-grayAt(x,y+r));
+  const edge=(dx+dy)/2;
+  if(edge>threshold&&z>.08)candidates.push({x,y,score:edge});
+ }
+ candidates.sort((a,b)=>b.score-a.score);pts=[];
+ const cell=13,occupied=new Set();
+ for(const p of candidates){
+  const gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell),key=gy*10000+gx;
+  if(occupied.has(key))continue;
+  pts.push(p);
+  for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)occupied.add((gy+oy)*10000+gx+ox);
+  if(pts.length>7000)break;
+ }
+ draw();scatter();$("count").textContent=pts.length.toLocaleString();$("progress").style.width="100%";
+};
+function scatter(){
+ const w=500,h=300;plot.clearRect(0,0,w,h);plot.fillStyle="#091b24";plot.fillRect(0,0,w,h);
+ plot.strokeStyle="#33545d";plot.beginPath();plot.moveTo(60,245);plot.lineTo(445,245);plot.moveTo(60,245);plot.lineTo(135,100);plot.moveTo(60,245);plot.lineTo(60,40);plot.stroke();
+ const cells=8;let counts=Array(cells*cells).fill(0);
+ for(const p of pts){let x=Math.min(7,Math.floor(p.x/W*cells)),y=Math.min(7,Math.floor(p.y/H*cells));counts[y*cells+x]++}
+ const max=Math.max(1,...counts);
+ for(let yi=0;yi<8;yi++)for(let xi=0;xi<8;xi++){
+  let v=counts[yi*8+xi],xx=95+xi*41+yi*11,yy=242-yi*14-(v/max)*150;
+  plot.fillStyle="hsl("+(145+(v/max)*42)+" 75% "+(48+v/max*12)+"%)";plot.beginPath();plot.arc(xx,yy,2.8+2.3*v/max,0,7);plot.fill()
+ }
+ plot.fillStyle="#a9cad0";plot.font="12px system-ui";plot.fillText("X →",436,257);plot.fillText("Density ↑",10,25);plot.fillText("Y ↗",121,99);
+}
+scatter();
+function makeReview(){
+ review=[];const used=new Set();let k=20261012;
+ function rand(){k=(1664525*k+1013904223)>>>0;return k/4294967296}
+ while(review.length<n){let i=Math.floor(rand()*N);if(!used.has(i)){used.add(i);review.push(i)}}
+ $("tileinputs").innerHTML="";
+ review.forEach((i,j)=>{
+  const box=document.createElement("div");box.className="sample";
+  const lab=document.createElement("label");lab.textContent="Tile "+(i+1);
+  const pos=document.createElement("kbd");pos.textContent="row "+(Math.floor(i/8)+1)+", col "+(i%8+1);
+  const inp=document.createElement("input");inp.type="number";inp.min="0";inp.step="1";inp.placeholder="Manual count";inp.id="t"+i;
+  const btn=document.createElement("button");btn.className="secondary";btn.type="button";btn.style.padding="5px";btn.textContent="View tile";
+  btn.onclick=()=>{draw();const tw=W/8,th=H/8,x=i%8*tw,y=Math.floor(i/8)*th;ctx.lineWidth=Math.max(2,W/300);ctx.strokeStyle="#ffd88d";ctx.strokeRect(x,y,tw,th)};
+  box.append(lab,pos,inp,btn);$("tileinputs").append(box);
+ });
+ $("interval").textContent="Enter all 12 independent manual counts to calculate an approximate 95% interval.";
+};
+function values(){return review.map(i=>Number($("t"+i)?.value)).filter((v,j)=>$("t"+review[j])?.value!==""&&Number.isInteger(v)&&v>=0)}
+$("estimate").onclick=()=>{
+ const y=values();if(y.length!==n){$("interval").textContent="Please complete all 12 valid whole-number manual counts.";return}
+ const mean=y.reduce((a,b)=>a+b,0)/n;
+ const variance=y.reduce((a,b)=>a+(b-mean)**2,0)/(n-1);
+ const se=N*Math.sqrt((1-n/N)*variance/n);
+ const margin=2.201*se,est=N*mean;
+ $("interval").textContent="Manual-sampling estimate: "+Math.round(est).toLocaleString()+" barnacles | Approximate 95% interval: "+Math.max(0,Math.round(est-margin)).toLocaleString()+" to "+Math.round(est+margin).toLocaleString()+". Approximation assumes independent, accurate manual counts of selected tiles; the interval can be unreliable with strongly skewed counts.";
+ $("interval").className="good";
+};
+$("export").onclick=()=>{
+ const rows=["tile_id,row,column,manual_count"];
+ review.forEach(i=>rows.push([i+1,Math.floor(i/8)+1,i%8+1,$("t"+i).value].join(",")));
+ const url=URL.createObjectURL(new Blob([rows.join("\n")],{type:"text/csv"}));
+ const a=document.createElement("a");a.href=url;a.download="barnacleai_manual_review.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+};
+</script>
+</body></html>
