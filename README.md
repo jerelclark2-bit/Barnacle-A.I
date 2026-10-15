@@ -1,11 +1,12 @@
 # BarnacleAI 🐚
 
-**DALI Data Challenge 26F** | Prototype for counting barnacles *inside the inner square of the teal frame*.
+Counting barnacles on rocks is harder than it sounds. They overlap, lighting gets weird, and even the labels aren't perfect.
 
-## Research question
-Can a lightweight deep-learning detector and a hand-engineered regression model provide useful, auditable barnacle-count estimates, while identifying regions that merit human review?
+This is my project for the **DALI 26F Data Challenge**. I tried two approaches, a small CNN and a feature-based Ridge regression model, to count barnacles in the **center square of the teal frame**. I also made a dashboard so you can check what the models got right, what they missed, and where a human should take a second look.
 
-## What this submission does
+It's a prototype, not a magic barnacle counter. Here's how it works.
+
+## What's in here
 
 - Extracts approximate barnacle-center annotations from supplied blue contour masks. Annotations are imperfect/incomplete and **must not be equated with exact population ground truth**.
 - Restricts analysis of `img1`/`img2` to manually inspected central-square crops. Coordinates are documented in `barnacleai/data.py`. Outer side squares and yellow ruler are excluded.
@@ -73,7 +74,7 @@ The brightest regions do **not** necessarily correspond to barnacles, so these a
 
 See [RESULTS.md](RESULTS.md) for the measured output of the included pilot training run.
 
-## Scientific validation and failure analysis
+## Where the models can go wrong
 
 - **Split by photograph, never random tiles.** Tiles from one photograph share lighting, rock texture, camera properties and organisms; mixing them into train/test would inflate accuracy.
 - **No test-set tuning.** The CNN's peak threshold is selected using the training photograph only.
@@ -83,7 +84,7 @@ See [RESULTS.md](RESULTS.md) for the measured output of the included pilot train
 - **Uncertainty.** Disagreement is a practical review flag. A genuine 95% count prediction interval would require additional, diverse *independent labeled photos* and appropriate calibration.
 - **Manual scientist corrections.** Feedback is stored to permit future analysis, not instantly incorporated into an online model.
 
-## What to show in a DALI interview
+## Demo checklist
 
 1. Open the held-out overlay and ask: Which barnacles were missed? Which are false positives?
 2. Compare CNN and Ridge MAE against the provided proxy annotations. Describe domain shift.
@@ -91,7 +92,7 @@ See [RESULTS.md](RESULTS.md) for the measured output of the included pilot train
 4. Explain the tradeoff: a reliable, inspectable human-in-the-loop prototype is more valuable than a false claim of solved automation.
 5. Be transparent about using AI assistance for implementation. Be able to personally explain every method you present.
 
-## Next experiments
+## What I'd try next
 
 Create independent hand-checked validation areas, capture more field photos, compare a pretrained CNN if weights are available, improve per-object labeling, and estimate scientist time saved. The UI and APIs are optional extensions and do not replace measured model quality.
 
@@ -115,7 +116,7 @@ The CSV remains intentionally blank until a real person verifies the tiles. No b
 
 **Updated training result:** A second experiment with 32 epochs and 64 sampled training tiles produced 1,104 proposed held-out centers and a mean absolute per-128px-tile difference of 12.57 from incomplete blue annotations (earlier 12-epoch version: 1,819 and 24.39). This is an improvement against the proxy benchmark, **not validated biological performance**. The actual pretrained weights used in these experiments: none; the CNN is trained from scratch. View [RESULTS.md](RESULTS.md) for the comparison.
 
-## GitHub and deployment
+## Hosting it
 
 The included `results/cnn.pt` and `results/ridge.joblib` let the dashboard start without retraining. GitHub Actions runs the tests on each push. GitHub Pages cannot execute this Python application. For an interactive hosted demo, use Streamlit Community Cloud with Python 3.11, repository root as the working directory and `app.py` as the entry point. Saved feedback on an ephemeral host may disappear after restarts; export reviewed counts or attach persistent storage.
 
