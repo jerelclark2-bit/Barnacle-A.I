@@ -10,6 +10,21 @@ It's a prototype, not a magic barnacle counter. Here's how it works.
 
 The browser demo runs the exported trained CNN weights with TensorFlow.js. Your photos stay in your browser; loading TensorFlow.js requires an internet connection. The Python/Streamlit dashboard below is a separate app.
 
+## Quick read
+
+| Held-out experiment | Result |
+| --- | ---: |
+| CNN count candidates in the cropped test square | 1,104 |
+| CNN mean absolute difference per evaluated 128 px tile | **12.57** |
+| Ridge baseline mean absolute difference per evaluated tile | 14.85 |
+| Complete tiles in the comparison | 49 |
+
+These are measurements **against incomplete blue annotation outlines**, not verified barnacle counts. I trained on `img1` and evaluated on `img2` so tiles from the same photograph wouldn't leak into the test set. The model is a proof of concept, not a reliable wildlife census.
+
+**How it works:** cropped photo → 128 px image tiles → CNN heatmap → candidate center peaks → count and overlay. The separate Ridge model uses hand-built brightness, symmetry, and texture features as a baseline. The [full results](RESULTS.md) show the tradeoffs and the sampling-based validation method.
+
+**Checks:** [automated tests](https://github.com/jerelclark2-bit/Barnacle-A.I/actions/workflows/tests.yml) cover the Python app and the exported browser-model assets.
+
 ## What's in here
 
 - Extracts approximate barnacle-center annotations from supplied blue contour masks. Annotations are imperfect/incomplete and **must not be equated with exact population ground truth**.
