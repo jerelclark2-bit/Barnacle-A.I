@@ -1,303 +1,453 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BarnacleAI · Upload, Count, Done</title>
-<meta name="description" content="Explore barnacle counts, image features, annotation uncertainty, and manually validated sampling estimates. DALI Data Challenge 26F.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BarnacleAI</title>
+<meta name="description" content="Counts barnacles in tide-pool photos with a small neural network that runs in your browser. Dartmouth DALI Lab data challenge, Fall 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--bg:#08141c;--panel:#10232c;--line:#25434c;--light:#edf8f7;--muted:#a3bdc2;--mint:#5ee6bf;--amber:#ffcb84}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#133842 0,transparent 37%),var(--bg);color:var(--light);font:15px/1.55 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-a{color:var(--mint)}header{border-bottom:1px solid var(--line);padding:16px max(20px,calc((100vw - 1220px)/2));display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
-.brand{font-weight:850;letter-spacing:-.6px;font-size:22px}.brand span{color:var(--mint)}nav{display:flex;gap:18px}nav a{font-size:13px;color:var(--muted);text-decoration:none}
-main{max-width:1220px;padding:30px 20px 70px;margin:auto}.eyebrow{color:var(--mint);text-transform:uppercase;letter-spacing:2.5px;font-size:11px;font-weight:800}
-.hero{padding:28px 2px 30px}h1{font-size:clamp(40px,6vw,75px);letter-spacing:-3.7px;line-height:1.03;margin:12px 0 16px;font-weight:850}
-.hero p{color:var(--muted);max-width:710px;font-size:17px;margin:0}.pill{display:inline-block;margin:18px 9px 0 0;padding:5px 11px;border:1px solid #315359;border-radius:99px;color:#b6d5d5;font-size:12px}
-.section-title{font-size:19px;letter-spacing:-.4px;font-weight:800;margin:0 0 13px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
-.card,.panel{background:linear-gradient(135deg,#112833,#0e2029);border:1px solid var(--line);border-radius:15px;padding:20px}
-.stat{font-size:34px;letter-spacing:-1px;font-weight:850;color:#f5fffc;margin:4px 0}.label{color:var(--muted);font-size:13px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.two{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}.control{border:1px dashed #41636a;padding:17px;border-radius:12px;margin:15px 0;background:#10282f}
-input[type=file]{display:block;max-width:100%;margin:8px 0 5px;color:#bfe0d9}button,.button{background:var(--mint);color:#05241d;padding:10px 16px;border:0;border-radius:9px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block}
-button.secondary,.button.secondary{background:#1b3c44;color:#e8fffb;border:1px solid #38666a}
-button:disabled{opacity:.55;cursor:not-allowed}.mini{font-size:12px;color:var(--muted)}
-canvas{max-width:100%;border-radius:11px;background:#06151c}.viewer{width:100%;max-height:520px;object-fit:contain;border:1px solid var(--line)}
-.prog{height:7px;background:#163039;border-radius:7px;overflow:hidden}.prog div{height:100%;background:var(--mint);transition:width .3s}
-.warn{padding:12px 14px;border:1px solid #705a40;background:#30291d;border-radius:10px;color:#ffdba2;font-size:13px;margin:15px 0}
-.good{padding:12px 14px;border:1px solid #31715b;background:#103529;border-radius:10px;color:#b6fce4;font-size:13px;margin:15px 0}
-.metricrow{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0}.metricrow strong{display:block;font-size:24px}.metricrow div{min-width:105px}
-h2{font-size:22px;margin:34px 0 15px}h3{margin:4px 0 10px;font-size:17px}
-.samplebox{max-height:280px;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.sample{padding:10px;background:#122c34;border:1px solid #27505b;border-radius:8px;display:grid;gap:5px}.sample input{width:100%;background:#061821;border:1px solid #42626b;color:white;border-radius:7px;padding:8px;font:inherit}
-kbd{font-size:11px;color:var(--mint)}footer{margin-top:40px;border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:12px}
-@media(max-width:900px){.two,.grid{grid-template-columns:1fr}h1{letter-spacing:-2px}main{padding-top:20px}}
-
-.instant-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin:16px 0 24px}
-.stat-xl{font-size:clamp(42px,6vw,72px);font-weight:850;line-height:1.07;letter-spacing:-2px;color:var(--mint)}
-.chart{width:100%;height:auto;min-height:185px;background:#091c25;border-radius:11px}
-.result-note{color:var(--muted);font-size:13px;line-height:1.7}
-.placeholder-result{color:var(--muted);font-size:17px;padding:12px 0}
-@media(max-width:850px){.instant-grid{grid-template-columns:1fr}}
-
-.hero {padding:26px 3px 14px}.hero h1{font-size:clamp(42px,6vw,72px)}.hero p{max-width:790px}
-.upload-card{background:#112b34;border:2px dashed #477e77;border-radius:19px;padding:20px 25px;margin:10px 0 21px}
-.upload-head{display:flex;gap:14px;align-items:center;margin-bottom:9px}.upload-head strong{font-size:18px}.upload-icon{font-size:33px}
-.upload-card input[type=file]{border-radius:8px;padding:5px;width:100%;max-width:700px}
-.top-grid{display:grid;grid-template-columns:.84fr 1.16fr;gap:16px;align-items:stretch;margin-bottom:13px}
-.result-panel,.preview-panel{background:linear-gradient(135deg,#112f39,#0b2029);border:1px solid var(--line);border-radius:19px;padding:25px}
-.main-number{font-size:clamp(64px,9vw,108px);font-weight:900;color:var(--mint);line-height:1.15;letter-spacing:-5px;margin:22px 0 4px}
-.range-number{font-size:clamp(27px,3vw,36px);font-weight:850;letter-spacing:-1px;margin:12px 0 10px}
-.separator{border-top:1px solid #34545d;margin:28px 0 21px}.chip{display:inline-block;border:1px solid #4e6e67;border-radius:99px;padding:3px 8px;font-size:10px;letter-spacing:0;text-transform:none;color:#c5d8d5}
-.preview-panel canvas{width:100%;max-height:430px;object-fit:contain}
-.caveat{font-size:12px;color:#a5c6cc;padding:0 5px 10px;line-height:1.7}
-.advanced{border:1px solid var(--line);border-radius:15px;margin:11px 0;background:#10242d;overflow:hidden}
-.advanced summary{padding:20px 22px;font-size:16px;font-weight:800;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:15px}
-.advanced summary:hover{background:#16343d}.advanced-body{padding:8px 22px 25px;border-top:1px solid var(--line)}
-.advanced .grid{margin-top:10px}
-@media(max-width:850px){.top-grid{grid-template-columns:1fr}.preview-panel{padding:16px}.result-panel{padding:18px}.advanced summary{font-size:14px}nav a:not(:last-child){display:none}}
+:root{
+color-scheme:light;
+--bg:#ffffff;--surface:#ffffff;--surface-head:#f5f5f5;--border:#dddddd;--rule:#e9ebec;
+--text:#606c71;--strong:#383e41;--heading:#159957;--link:#1e6bb8;--muted:#819198;
+--btn:#159957;--btn-border:#128a4e;--btn-text:#ffffff;--btn2:#ffffff;--btn2-border:#cccccc;--btn2-text:#383e41;
+--warn-bg:#fcf8e3;--warn-border:#faebcc;--warn-text:#8a6d3b;
+--good-bg:#dff0d8;--good-border:#d6e9c6;--good-text:#3c763d;
+--note-bg:#f3f6fa;--note-border:#dce6f0;--note-text:#567482;
+--canvas-bg:#eef2f5;--chart-bg:#ffffff;--chart-axis:#cccccc;--chart-text:#606c71;
+--series-a:#159957;--series-b:#155799;--series-hi:#e67e22;--track:#e9ebec;--input-bg:#ffffff;
+}
+@media (prefers-color-scheme:dark){:root{
+color-scheme:dark;
+--bg:#1c2023;--surface:#23282c;--surface-head:#2a3035;--border:#394147;--rule:#394147;
+--text:#b9c3c8;--strong:#e6ecef;--heading:#3fc98a;--link:#6cb4ff;--muted:#8b979d;
+--btn:#1a9e5c;--btn-border:#17894f;--btn-text:#ffffff;--btn2:#2a3035;--btn2-border:#4a535a;--btn2-text:#e6ecef;
+--warn-bg:#3a3220;--warn-border:#5c4d2a;--warn-text:#f0d9a0;
+--good-bg:#1f3524;--good-border:#2e5236;--good-text:#a8dcb0;
+--note-bg:#262c31;--note-border:#394147;--note-text:#b9c3c8;
+--canvas-bg:#171a1d;--chart-bg:#23282c;--chart-axis:#4a535a;--chart-text:#b9c3c8;
+--series-a:#3fc98a;--series-b:#5fa8e8;--series-hi:#f0a04b;--track:#394147;--input-bg:#1c2023;
+}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;color:var(--text);background:var(--bg)}
+a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}
+p{margin:0 0 1rem}
+.page-header{color:#fff;text-align:center;background-color:#159957;background-image:linear-gradient(120deg,#155799,#159957);padding:5rem 6rem}
+.project-name{margin:0 0 .25rem;font-size:3.25rem;font-weight:400;line-height:1.2}
+.project-tagline{max-width:40rem;margin:0 auto 2rem;font-size:1.25rem;line-height:1.45;opacity:.75}
+.page-header .btn{display:inline-block;margin:0 .4rem .5rem;padding:.75rem 1rem;color:rgba(255,255,255,.8);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:.3rem;font-size:.95rem}
+.page-header .btn:hover{color:#fff;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);text-decoration:none}
+.main-content{max-width:64rem;margin:0 auto;padding:3rem 6rem}
+.main-content h2{margin:3rem 0 1rem;color:var(--heading);font-size:1.75rem;font-weight:400;line-height:1.25}
+.main-content h2:first-child{margin-top:0}
+.main-content>p{max-width:44rem}
+.well{padding:1.2rem 1.25rem;background:var(--surface-head);border:1px solid var(--border);border-radius:4px;box-shadow:inset 0 1px 1px rgba(0,0,0,.05);margin-bottom:1.25rem}
+.well .hint{margin:.5rem 0 0}
+.upload-label{display:block;margin-bottom:.5rem;color:var(--strong);font-weight:600}
+input[type=file]{max-width:100%;font:inherit;font-size:.95rem;color:var(--strong)}
+.cols{display:grid;grid-template-columns:5fr 7fr;gap:1.25rem;align-items:start}
+.cols.even{grid-template-columns:1fr 1fr}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;box-shadow:0 1px 1px rgba(0,0,0,.05);margin-bottom:1.25rem;min-width:0}
+.panel-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.25rem 1rem;padding:.6rem 1rem;background:var(--surface-head);border-bottom:1px solid var(--border);border-radius:3px 3px 0 0;color:var(--strong);font-weight:600}
+.panel-heading small{color:var(--muted);font-size:.85rem;font-weight:400}
+.panel-body{padding:1rem}
+.panel-body>:last-child{margin-bottom:0}
+.big-number{margin:0;color:var(--strong);font-size:4.5rem;font-weight:300;line-height:1.1;font-variant-numeric:tabular-nums}
+.big-label{margin:0 0 1.25rem;color:var(--muted)}
+.range{margin:0;color:var(--strong);font-size:1.5rem;font-weight:300}
+.hint{font-size:.875rem;color:var(--muted)}
+.status{margin-top:1rem;color:var(--strong)}
+button{font:inherit;font-size:.9rem;line-height:1.4;padding:.45rem .9rem;border:1px solid var(--btn-border);border-radius:4px;background:var(--btn);color:var(--btn-text);cursor:pointer}
+button:hover:not(:disabled){filter:brightness(1.08)}
+button.secondary{background:var(--btn2);border-color:var(--btn2-border);color:var(--btn2-text)}
+button:disabled{opacity:.55;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.warn,.good,.note{margin:1rem 0;padding:.75rem 1rem;border:1px solid;border-radius:4px;font-size:.9rem}
+.warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-text)}
+.good{background:var(--good-bg);border-color:var(--good-border);color:var(--good-text)}
+.note{background:var(--note-bg);border-color:var(--note-border);color:var(--note-text)}
+table{width:100%;border-collapse:collapse;margin:0 0 .75rem;font-size:.95rem}
+th,td{padding:.5rem 1rem;border:1px solid var(--rule);text-align:left}
+th{background:var(--surface-head);color:var(--strong);font-weight:600}
+td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--strong)}
+td.center{text-align:center}
+canvas{display:block;max-width:100%}
+.viewer{width:100%;height:auto;max-height:520px;object-fit:contain;background:var(--canvas-bg);border:1px solid var(--rule);border-radius:3px}
+.chart{width:100%;height:auto;border:1px solid var(--rule);border-radius:3px}
+.slider{display:flex;justify-content:space-between;color:var(--strong);font-weight:600}
+input[type=range]{width:100%;margin:.5rem 0 .25rem;accent-color:var(--btn)}
+.progress{height:.75rem;margin:1rem 0;overflow:hidden;background:var(--track);border-radius:4px;box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}
+.progress div{height:100%;background-color:var(--btn);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-size:1rem 1rem;transition:width .3s}
+.stats{display:flex;flex-wrap:wrap;gap:1rem 1.75rem;margin:0 0 1rem}
+.stats div{min-width:6.5rem}
+.stats.grid2{display:grid;grid-template-columns:1fr 1fr}
+.samplebox>.hint{grid-column:1/-1;margin:0}
+.stats span{display:block;color:var(--muted);font-size:.85rem}
+.stats strong{color:var(--strong);font-size:1.4rem;font-weight:400;font-variant-numeric:tabular-nums}
+.samplebox{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:.75rem;margin-bottom:1rem}
+.sample{display:grid;gap:.35rem;padding:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:4px}
+.sample label{color:var(--strong);font-weight:600}
+.sample kbd{font:inherit;font-size:.8rem;color:var(--muted)}
+.sample input{width:100%;padding:.4rem .5rem;font:inherit;color:var(--strong);background:var(--input-bg);border:1px solid var(--btn2-border);border-radius:4px;box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}
+.sample button{padding:.3rem .6rem;font-size:.85rem}
+.buttons{display:flex;flex-wrap:wrap;gap:.5rem}
+.site-footer{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--rule);color:var(--muted);font-size:.9rem}
+.site-footer p{margin:0 0 .5rem}
+@media (prefers-reduced-motion:reduce){.progress div{transition:none}}
+@media (max-width:64em){.page-header{padding:3rem 4rem}.project-name{font-size:2.5rem}.main-content{padding:2.5rem 3rem}}
+@media (max-width:52em){.cols,.cols.even{grid-template-columns:1fr}}
+@media (max-width:42em){.page-header{padding:2rem 1rem}.project-name{font-size:1.85rem}.project-tagline{font-size:1rem}.page-header .btn{display:block;margin:0 0 .75rem}.main-content{padding:2rem 1rem}.big-number{font-size:3.25rem}th,td{padding:.5rem .6rem}}
 </style>
 </head>
 <body>
+<header class="page-header">
+<h1 class="project-name">BarnacleAI</h1>
+<p class="project-tagline">Counts barnacles in tide-pool photos with a small neural network that runs right in your browser. Built for the Dartmouth DALI Lab data challenge, Fall 2026.</p>
+<a class="btn" href="https://github.com/jerelclark2-bit/Barnacle-A.I">View on GitHub</a><a class="btn" href="#research">See the results</a><a class="btn" href="#how">How it works</a>
+</header>
 
-<header><div class="brand">🐚 Barnacle<span>AI</span></div><nav><a href="#how">About</a><a href="https://github.com/jerelclark2-bit/Barnacle-A.I" target="_blank" rel="noopener">GitHub ↗</a></nav></header>
-<main>
-<section class="hero">
-  <div class="eyebrow">BarnacleAI · DALI research prototype</div>
-  <h1>Upload. Count. <span style="color:var(--mint)">Done.</span></h1>
-  <p>Pick a photo and BarnacleAI immediately finds likely barnacles. No forms, no sliders, no counting by hand.</p>
-</section>
-<section class="upload-card" aria-label="Upload barnacle photograph">
-  <div class="upload-head"><span class="upload-icon">📷</span><div><strong>Your photo goes here</strong><div class="mini">JPG or PNG · stays on your device · trained CNN</div></div></div>
-  <input type="file" id="upload" accept="image/png,image/jpeg" aria-label="Upload your barnacle photograph"/>
-</section>
-<section class="top-grid" id="instant">
-  <div class="result-panel">
-    <div class="eyebrow">Trained CNN estimate <span class="chip">Experimental</span></div>
-    <div id="instantCount" class="main-number">—</div>
-    <div class="label">Likely barnacle candidates</div>
-    <div class="separator"></div>
-    <div class="eyebrow">Model sensitivity band · not a 95% CI</div>
-    <div id="instantRange" class="range-number">—</div>
-    <p id="instantStatus" class="mini">Upload a photo to see your result instantly.</p>
-    <button id="downloadSummary" class="secondary" disabled>↓ Save results</button>
-  </div>
-  <div class="preview-panel">
-    <div class="row" style="margin-bottom:10px"><strong>Detection preview</strong><span class="mini">Green dots = candidates</span></div>
-    <canvas id="photo" class="viewer" width="800" height="500" aria-label="Photo showing detected candidate barnacles"></canvas>
-    <div class="mini" style="margin-top:10px">This preview runs the <b>trained PyTorch CNN weights</b> locally in your browser using TensorFlow.js. Green dots mark proposed centers, not verified barnacles.</div>
-  </div>
-</section>
-<div class="caveat">The automatic estimate now uses the actual trained CNN. Its range shows how the count changes with the model’s peak threshold; it is not a validated 95% confidence interval. Manual verification is optional.</div>
-<details class="advanced">
-  <summary><span>📊 Model graphs & detailed analysis</span><span class="mini">Optional — expand</span></summary>
-  <div class="advanced-body">
-    <section id="research">
-      <h2>Model research results</h2>
-      <div class="grid">
-        <div class="card"><div class="label">Trained CNN · held-out candidate detections</div><div class="stat">1,104</div><div class="mini">Not a verified biological count</div></div>
-        <div class="card"><div class="label">CNN benchmark tile MAE</div><div class="stat">12.57</div><div class="mini">Versus incomplete annotations</div></div>
-        <div class="card"><div class="label">Ridge benchmark tile MAE</div><div class="stat">14.85</div><div class="mini">Same incomplete annotations</div></div>
-      </div>
-      <div class="two" style="margin:18px 0">
-        <div class="panel"><h3>Model prediction error</h3><canvas id="errorChart" class="chart" width="600" height="280"></canvas><p class="mini">Lower is better. These are differences against incomplete annotation masks, not ground-truth biological error.</p></div>
-        <div class="panel"><h3>CNN training progress</h3><canvas id="lossChart" class="chart" width="600" height="280"></canvas><p class="mini">Decreasing training loss does not establish accuracy on unseen images.</p></div>
-      </div>
-      <div class="panel"><h3>How sensitive is this estimate?</h3><canvas id="sensitivityChart" class="chart" width="600" height="280"></canvas><p class="mini">Automatic candidate counts under different detection thresholds, not a 95% confidence interval.</p></div>
-    </section>
-    <section id="explore">
-      <h2>Image details</h2>
-      <div class="two">
-        <div class="panel">
-          <h3>Optional CNN threshold adjustments</h3>
-          <label class="mini">Sensitivity <input id="sensitivity" type="range" min="60" max="85" value="75" style="vertical-align:middle"><span id="slabel">75</span></label>
-          <button id="analyze">Recalculate</button>
-          <div class="prog" style="margin-top:14px"><div id="progress" style="width:0"></div></div>
-          <div class="metricrow"><div><span class="label">Candidate points</span><strong id="count">—</strong></div><div><span class="label">Image size</span><strong id="dims">—</strong></div></div>
-        </div>
-        <div class="panel">
-          <h3>Visual image features</h3><div class="metricrow">
-          <div><span class="label">Brightness</span><strong id="density">—</strong></div>
-          <div><span class="label">Horizontal center</span><strong id="cx">—</strong></div>
-          <div><span class="label">Symmetry</span><strong id="sym">—</strong></div>
-          <div><span class="label">Left-right balance</span><strong id="bal">—</strong></div></div>
-          <h3>Candidate location distribution</h3><canvas id="scatter" width="500" height="300" class="chart"></canvas>
-        </div>
-      </div>
-    </section>
-  </div>
-</details>
-<details class="advanced">
- <summary><span>✅ Optional manual verification</span><span class="mini">Only if you want a 95% sampling interval</span></summary>
- <div class="advanced-body" id="validation">
-   <p>For a design-based approximate 95% sampling interval, manually count barnacles in twelve randomly selected image tiles. This optional step estimates uncertainty from random sampling; it is not a calibrated CNN prediction interval.</p>
-   <div id="tileinputs" class="samplebox"><p class="mini">Upload an image to prepare tiles.</p></div>
-   <div class="row" style="margin-top:16px"><button id="estimate" disabled>Calculate 95% sampling interval</button><button id="export" class="secondary" disabled>Export review CSV</button></div>
-   <div id="interval" class="warn">Optional: no manual counts entered.</div>
- </div>
-</details>
-<details class="advanced" id="how">
-  <summary><span>🔬 How the actual AI works</span><span class="mini">Methodology and limitations</span></summary>
-  <div class="advanced-body"><p>The website now runs the actual small PyTorch CNN in your browser using TensorFlow.js with exported trained weights. The full Python project additionally provides Ridge regression, detailed evaluation, and optional human verification.</p><p>Its sample of labeled photos is small, the labels are incomplete, and a reliable automatic 95% prediction interval needs independently validated data. This application never substitutes a polished graph for verified accuracy.</p></div>
-</details>
-<footer>BarnacleAI · Dartmouth DALI 26F · Experimental academic prototype. Outputs are not ecological measurements. <a href="https://github.com/jerelclark2-bit/Barnacle-A.I">Source repository</a>.</footer>
+<main class="main-content">
+<h2 id="try">Count a photo</h2>
+<div class="well">
+<label class="upload-label" for="upload">Choose a photo</label>
+<input type="file" id="upload" accept="image/png,image/jpeg">
+<p class="hint">JPG or PNG, cropped to the inner square of the frame so the count matches the Python model. Your photo stays on your computer.</p>
+</div>
+
+<div class="cols">
+<div class="panel">
+<div class="panel-heading">Estimate <small>experimental</small></div>
+<div class="panel-body">
+<p id="instantCount" class="big-number">—</p>
+<p class="big-label">barnacle candidates</p>
+<p id="instantRange" class="range">—</p>
+<p class="hint">Range across nearby thresholds. This is not a 95% confidence interval.</p>
+<p id="instantStatus" class="hint status">Choose a photo to get a count.</p>
+<p id="cnnDiag" class="hint"></p>
+<div id="scoreWarn" class="warn" role="status" hidden></div>
+<button id="downloadSummary" class="secondary" disabled>Download results (CSV)</button>
+</div>
+</div>
+<div class="panel">
+<div class="panel-heading">Detections <small>green circles are candidates, not confirmed barnacles</small></div>
+<div class="panel-body"><canvas id="photo" class="viewer" width="800" height="500" aria-label="Your photo with barnacle candidates circled"></canvas></div>
+</div>
+</div>
+
+<h2 id="research">Results so far</h2>
+<p>Both models learned from one labeled photo and were tested on a second photo they had never seen.</p>
+<table>
+<thead><tr><th scope="col">On the held-out photo</th><th scope="col">CNN</th><th scope="col">Ridge regression</th></tr></thead>
+<tbody>
+<tr><td>Barnacle candidates found</td><td class="num">1,104</td><td class="num">—</td></tr>
+<tr><td>Mean absolute error per 128 px tile</td><td class="num">12.57</td><td class="num">14.85</td></tr>
+<tr><td>Barnacles outlined in the labels</td><td class="center" colspan="2">350 (the outlines miss some barnacles)</td></tr>
+</tbody>
+</table>
+<p class="hint">Errors are measured against those incomplete outlines, so they aren't true biological accuracy. Lower is better.</p>
+<div class="cols even">
+<div class="panel"><div class="panel-heading">Error per tile</div><div class="panel-body"><canvas id="errorChart" class="chart" width="600" height="280"></canvas></div></div>
+<div class="panel"><div class="panel-heading">Training loss</div><div class="panel-body"><canvas id="lossChart" class="chart" width="600" height="280"></canvas><p class="hint" style="margin-top:.5rem">Falling training loss doesn't prove accuracy on new photos.</p></div></div>
+</div>
+<div class="panel"><div class="panel-heading">How the count changes with the threshold</div><div class="panel-body"><canvas id="sensitivityChart" class="chart" width="600" height="280"></canvas></div></div>
+
+<h2 id="explore">Image details</h2>
+<div class="cols even">
+<div class="panel"><div class="panel-heading">Detection threshold</div><div class="panel-body">
+<label class="slider" for="sensitivity"><span>Threshold</span><span id="slabel">0.75</span></label>
+<input id="sensitivity" type="range" min="20" max="95" value="75">
+<p class="hint">0.75 was picked on the training photo. Higher is stricter and finds fewer candidates.</p>
+<button id="analyze">Recount</button>
+<div class="progress" aria-hidden="true"><div id="progress" style="width:0"></div></div>
+<div class="stats"><div><span>Candidates</span><strong id="count">—</strong></div><div><span>Image size</span><strong id="dims">—</strong></div></div>
+</div></div>
+<div class="panel"><div class="panel-heading">Image features <small>from COSC 3</small></div><div class="panel-body">
+<div class="stats grid2">
+<div><span>Brightness</span><strong id="density">—</strong></div>
+<div><span>Horizontal center</span><strong id="cx">—</strong></div>
+<div><span>Symmetry</span><strong id="sym">—</strong></div>
+<div><span>Left-right balance</span><strong id="bal">—</strong></div>
+</div>
+<p class="hint">Where the candidates are, by region of the photo</p>
+<canvas id="scatter" width="500" height="300" class="chart"></canvas>
+</div></div>
+</div>
+
+<h2 id="validation">Check it by hand</h2>
+<p>Optional. For a real uncertainty range, count the barnacles in these 12 randomly chosen tiles yourself. The page then estimates the total with an approximate 95% interval. That range comes from your counts, not from the model.</p>
+<div id="tileinputs" class="samplebox"><p class="hint">Choose a photo first and the tiles will show up here.</p></div>
+<div class="buttons"><button id="estimate" disabled>Calculate interval</button><button id="export" class="secondary" disabled>Export counts (CSV)</button></div>
+<div id="interval" class="note">No counts entered yet.</div>
+
+<h2 id="how">How it works</h2>
+<p>A small convolutional neural network, trained from scratch in PyTorch, turns the photo into a heatmap of likely barnacle centers. Each peak above the threshold counts as one candidate. Here it runs with TensorFlow.js, so the photo never leaves your computer.</p>
+<p>The full Python project also has a Ridge regression baseline built on hand-made image features (brightness, intensity center, symmetry, balance, edges and texture), the evaluation above, and a Streamlit app for reviewing and correcting counts.</p>
+<p>There are only two labeled photos to learn from and test on, and those labels miss some barnacles. Treat every count as an estimate until someone checks it by hand.</p>
+
+<footer class="site-footer">
+<p>BarnacleAI is maintained by <a href="https://github.com/jerelclark2-bit">jerelclark2-bit</a>. Experimental academic prototype; counts are not ecological measurements.</p>
+<p id="build">Build 2026-10-15e</p>
+</footer>
 </main>
+
 <script src="./inference.js?v=cnn-20261015-2"></script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const c=$("photo"),ctx=c.getContext("2d",{willReadFrequently:true}),plot=$("scatter").getContext("2d"),N=64,n=12;
-let rgba=null,W=0,H=0,pts=[],review=[],peakCandidates=[],analysisReady=false,activeRequest=0;
-function placeholder(){ctx.fillStyle="#0a1c24";ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle="#82a9b0";ctx.font="18px system-ui";ctx.textAlign="center";ctx.fillText("Upload a cropped barnacle photograph to begin",c.width/2,c.height/2);ctx.textAlign="start";}
+// Run the CNN at the photo's own resolution so barnacles are the size it was trained on.
+// Cropped DALI squares (about 1 MP) run at full size; only photos above 4 MP are scaled down.
+const MAX_PIXELS=4e6;
+// Keep every peak down to 0.20 and filter by the slider afterwards.
+const PEAK_FLOOR=0.20;
+const TRAINED_THRESHOLD=0.75; // threshold selected on the training photo (RESULTS.md)
+const FONT='"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
+let rgba=null,baseImage=null,W=0,H=0,pts=[],review=[],peakCandidates=[],analysisReady=false,activeRequest=0,scoreInfo=null,imageScale=1,lastSensitivity=null;
+
+// Chart colors come from the CSS variables, so canvases match light and dark mode.
+function cssVar(name,fallback){
+try{if(typeof getComputedStyle==="function"&&document.documentElement){const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim();if(v)return v}}catch(e){}
+return fallback}
+function pal(){return{bg:cssVar("--chart-bg","#ffffff"),axis:cssVar("--chart-axis","#cccccc"),text:cssVar("--chart-text","#606c71"),a:cssVar("--series-a","#159957"),b:cssVar("--series-b","#155799"),hi:cssVar("--series-hi","#e67e22"),canvas:cssVar("--canvas-bg","#eef2f5")}}
+
+function placeholder(){const p=pal();ctx.fillStyle=p.canvas;ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle=p.text;ctx.font=Math.round(c.width/30)+"px "+FONT;ctx.textAlign="center";ctx.fillText("Choose a photo to see detections here",c.width/2,c.height/2);ctx.textAlign="start";}
 placeholder();
-$("sensitivity").addEventListener("input",()=>{$("slabel").textContent=$("sensitivity").value});
+$("sensitivity").addEventListener("input",()=>{$("slabel").textContent=(Number($("sensitivity").value)/100).toFixed(2)});
+function showWarn(msg){const w=$("scoreWarn");w.textContent=msg;w.hidden=false}
+function hideWarn(){const w=$("scoreWarn");w.textContent="";w.hidden=true}
+function scaleNote(){return imageScale<1?"Photo scaled to "+Math.round(imageScale*100)+"% to keep the browser responsive, so barnacles look smaller than in training and the count may drop. Crop to the inner square for the most reliable result. ":""}
+
+// Check up front whether the CNN can run here, so a missing file is never a silent failure.
+function cnnAvailable(){return typeof BarnacleCNN!=="undefined"&&BarnacleCNN&&typeof BarnacleCNN.load==="function"}
+function setupProblem(){
+if(!cnnAvailable())return "The CNN code (inference.js) didn't load, so no count can be made. This page has to sit in the same folder as inference.js and model_weights.json and be opened through a web server: your GitHub Pages site, or run python3 -m http.server in the repo folder and open http://localhost:8000. Double-clicking the file or opening it in a file preview won't work.";
+if(location.protocol==="file:")return "This page was opened as a local file, and browsers block it from loading model_weights.json. Run python3 -m http.server in the repo folder and open http://localhost:8000 instead.";
+return "";
+}
+window.addEventListener("error",e=>{$("instantStatus").textContent="Something went wrong: "+(e.message||"unknown error")+". Open the browser console for details."});
+window.addEventListener("unhandledrejection",e=>{$("instantStatus").textContent="Something went wrong: "+((e.reason&&e.reason.message)||String(e.reason))+". Open the browser console for details."});
+
+// Summarize the raw CNN score map so a mismatch with the Python model shows up on the page.
+function scoreStats(probability){
+const a=probability&&typeof probability.dataSync==="function"?probability.dataSync():probability;
+let min=Infinity,max=-Infinity,sum=0,len=a?a.length:0;
+for(let i=0;i<len;i++){const v=a[i];if(v<min)min=v;if(v>max)max=v;sum+=v}
+return {min:len?min:0,max:len?max:0,mean:len?sum/len:0,pixels:len};
+}
+function reportScores(){
+if(!scoreInfo)return;
+const s=scoreInfo,at=t=>peakCandidates.filter(p=>p.score>=t).length;
+const a25=at(.25),a50=at(.5),a75=at(TRAINED_THRESHOLD);
+$("cnnDiag").textContent=scaleNote()+"Score check: highest "+s.max.toFixed(3)+", average "+s.mean.toFixed(3)+". Candidates at 0.25 / 0.50 / 0.75: "+a25.toLocaleString()+" / "+a50.toLocaleString()+" / "+a75.toLocaleString()+".";
+console.log("BarnacleAI score check",{min:s.min,max:s.max,mean:s.mean,pixels:s.pixels,size:W+"x"+H,scale:imageScale,candidates_025:a25,candidates_050:a50,candidates_075:a75});
+if(s.min<0||s.max>1){
+showWarn("CNN scores fall outside 0–1 (lowest "+s.min.toFixed(2)+", highest "+s.max.toFixed(2)+"). The browser is probably reading raw logits, so a sigmoid needs to be applied to the final layer in inference.js.");
+}else if(s.max<TRAINED_THRESHOLD){
+showWarn("The highest CNN score on this photo is "+s.max.toFixed(3)+", below the "+TRAINED_THRESHOLD.toFixed(2)+" threshold chosen on the training photo, so almost nothing can be counted. If this is img2's central square, where the Python model finds about 1,104 candidates, the browser model is not reproducing the Python model. Check the input preprocessing and the weight export.");
+}else if(s.max-s.mean<0.05){
+showWarn("CNN scores are nearly flat across the photo (highest "+s.max.toFixed(3)+", average "+s.mean.toFixed(3)+"), so the peaks are mostly noise. This usually means the weights or preprocessing don't match the Python model.");
+}else{hideWarn()}
+}
+
+// Decode the photo straight from the file (works in sandboxed pages where blob URLs are blocked).
+async function decodePhoto(f){
+if(typeof createImageBitmap==="function"){try{return await createImageBitmap(f)}catch(err){console.warn("createImageBitmap failed, trying FileReader",err)}}
+const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error("The file couldn't be read."));r.readAsDataURL(f)});
+return await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error("This file isn't an image the browser can open. Choose a JPG or PNG."));im.src=dataUrl});
+}
+// Clear the picker when it's clicked, so choosing the same photo again still starts a new run.
+$("upload").addEventListener("click",e=>{e.target.value=""});
 $("upload").addEventListener("change",async e=>{
- const f=e.target.files&&e.target.files[0];if(!f)return;
- if(f.size>16000000){alert("Please choose a file under 16 MB.");return}
- const request=++activeRequest;
- const url=URL.createObjectURL(f),im=new Image();
- im.onload=async ()=>{
-  const scale=Math.min(1,1024/Math.max(im.width,im.height));
-  W=Math.max(1,Math.round(im.width*scale));H=Math.max(1,Math.round(im.height*scale));
-  c.width=W;c.height=H;ctx.drawImage(im,0,0,W,H);rgba=ctx.getImageData(0,0,W,H).data;
-  URL.revokeObjectURL(url);
-  pts=[];peakCandidates=[];analysisReady=false;draw();features();makeReview();
-  $("analyze").disabled=true;$("estimate").disabled=false;$("export").disabled=false;
-  $("downloadSummary").disabled=true;
-  $("dims").textContent=W+"×"+H;$("count").textContent="—";$("instantCount").textContent="…";
-  $("instantRange").textContent="Calculating…";$("instantStatus").textContent="Loading the trained CNN. First run may take a moment.";
-  $("progress").style.width="3%";
-  try{
-   const info=await BarnacleCNN.load();
-   if(request!==activeRequest)return;
-   $("instantStatus").textContent="Running the trained CNN on your photo…";
-   const probability=await BarnacleCNN.probabilityMap(rgba,W,H,(done,total)=>{
-    if(request!==activeRequest)return;
-    $("progress").style.width=Math.round(5+90*done/total)+"%";
-    $("instantStatus").textContent="Analyzing photo with CNN: "+done+" / "+total+" image tiles";
-   });
-   if(request!==activeRequest)return;
-   peakCandidates=BarnacleCNN.findPeaks(probability,W,H,0.58,7);
-   analysisReady=true;$("analyze").disabled=false;
-   $("analyze").click();
-   $("instantStatus").textContent="Trained CNN finished ("+info.backend+" backend). These are experimental candidate centers, not independently verified counts.";
-  }catch(error){
-   if(request!==activeRequest)return;
-   console.error("BarnacleAI inference failed",error);
-   $("instantCount").textContent="—";$("instantRange").textContent="Unavailable";
-   $("instantStatus").textContent="CNN could not run: "+(error.message||String(error))+" No fallback count is shown.";
-   $("progress").style.width="0%";
-  }
- };
- im.onerror=()=>{URL.revokeObjectURL(url);alert("Could not read image.")};im.src=url;
+const f=e.target.files&&e.target.files[0];if(!f)return;
+if(f.size>16000000){$("instantStatus").textContent="That file is over 16 MB. Choose a smaller photo.";return}
+$("instantStatus").textContent="Reading photo…";$("instantCount").textContent="…";
+const request=++activeRequest;
+let im;
+try{im=await decodePhoto(f)}catch(err){
+if(request!==activeRequest)return;
+$("instantCount").textContent="—";$("instantRange").textContent="—";
+$("instantStatus").textContent=err.message||"The photo couldn't be opened.";return;
+}
+if(request!==activeRequest)return;
+const iw=im.width,ih=im.height;
+imageScale=Math.min(1,Math.sqrt(MAX_PIXELS/(iw*ih)));
+W=Math.max(1,Math.round(iw*imageScale));H=Math.max(1,Math.round(ih*imageScale));
+c.width=W;c.height=H;ctx.drawImage(im,0,0,W,H);baseImage=ctx.getImageData(0,0,W,H);rgba=baseImage.data;
+if(typeof im.close==="function")im.close();
+pts=[];peakCandidates=[];scoreInfo=null;analysisReady=false;draw();features();makeReview();
+$("analyze").disabled=true;$("estimate").disabled=false;$("export").disabled=false;
+$("downloadSummary").disabled=true;
+$("dims").textContent=W+"×"+H;$("count").textContent="—";$("instantCount").textContent="…";
+$("instantRange").textContent="Calculating…";$("instantStatus").textContent="Loading the trained CNN. The first run can take a moment.";
+$("cnnDiag").textContent=scaleNote();hideWarn();
+const problem=setupProblem();
+if(problem){
+$("instantCount").textContent="—";$("instantRange").textContent="Unavailable";
+$("instantStatus").textContent="Your photo loaded, but the CNN can't run on this page.";
+showWarn(problem);return;
+}
+$("progress").style.width="3%";
+await new Promise(r=>setTimeout(r,30)); // let the photo and status appear before heavy work starts
+try{
+const info=await BarnacleCNN.load();
+if(request!==activeRequest)return;
+$("instantStatus").textContent="Running the trained CNN on your photo…";
+const probability=await BarnacleCNN.probabilityMap(rgba,W,H,(done,total)=>{
+if(request!==activeRequest)return;
+$("progress").style.width=Math.round(5+90*done/total)+"%";
+$("instantStatus").textContent="Analyzing tile "+done+" of "+total+"…";
 });
+if(request!==activeRequest)return;
+scoreInfo=scoreStats(probability);
+peakCandidates=BarnacleCNN.findPeaks(probability,W,H,PEAK_FLOOR,7);
+analysisReady=true;$("analyze").disabled=false;
+$("analyze").click();
+reportScores();
+$("instantStatus").textContent="Done ("+info.backend+" backend). These are proposed barnacle centers, not verified counts.";
+}catch(error){
+if(request!==activeRequest)return;
+console.error("BarnacleAI inference failed",error);
+$("instantCount").textContent="—";$("instantRange").textContent="Unavailable";
+$("instantStatus").textContent="The CNN couldn't run: "+(error.message||String(error))+" No backup count is shown.";
+$("progress").style.width="0%";
+}
+});
+
 function grayAt(x,y){const i=4*(y*W+x);return(.2126*rgba[i]+.7152*rgba[i+1]+.0722*rgba[i+2])/255;}
 function features(){
- if(!rgba)return;
- let mass=0,xmass=0,left=0,right=0,mirror=0;
- const step=Math.max(1,Math.round(Math.max(W,H)/450));
- for(let y=0;y<H;y+=step)for(let x=0;x<W;x+=step){const g=grayAt(x,y);mass+=g;xmass+=g*x/(W-1);if(x<W/2)left+=g;else right+=g;mirror+=Math.abs(g-grayAt(W-1-x,y))}
- let area=Math.ceil(W/step)*Math.ceil(H/step);
- $("density").textContent=(mass/area).toFixed(3);$("cx").textContent=(xmass/(mass||1)).toFixed(3);
- $("sym").textContent=(1-mirror/(2*(mass||1))).toFixed(3);
- $("bal").textContent=((left-right)/(left+right||1)).toFixed(3);
+if(!rgba)return;
+let mass=0,xmass=0,left=0,right=0,mirror=0;
+const step=Math.max(1,Math.round(Math.max(W,H)/450));
+for(let y=0;y<H;y+=step)for(let x=0;x<W;x+=step){const g=grayAt(x,y);mass+=g;xmass+=g*x/(W-1);if(x<W/2)left+=g;else right+=g;mirror+=Math.abs(g-grayAt(W-1-x,y))}
+let area=Math.ceil(W/step)*Math.ceil(H/step);
+$("density").textContent=(mass/area).toFixed(3);$("cx").textContent=(xmass/(mass||1)).toFixed(3);
+$("sym").textContent=(1-mirror/(2*(mass||1))).toFixed(3);
+$("bal").textContent=((left-right)/(left+right||1)).toFixed(3);
 }
 function draw(){
- if(!rgba)return;ctx.putImageData(new ImageData(new Uint8ClampedArray(rgba),W,H),0,0);
- ctx.strokeStyle="#67f2be";ctx.lineWidth=1.3;
- for(const p of pts){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.stroke()}
+if(!baseImage)return;ctx.putImageData(baseImage,0,0);
+// Circles scale with the image so they stay visible on full-resolution photos.
+const r=Math.max(3,Math.round(Math.max(W,H)/340));
+ctx.strokeStyle="#39ff7a";ctx.lineWidth=Math.max(1.5,r/2.5);
+for(const p of pts){ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.stroke()}
 }
+// Size a canvas to how wide it actually appears, so chart text is a real 12-13px on every screen.
+function fitCanvas(cv,aspect){
+const dpr=(typeof window!=="undefined"&&window.devicePixelRatio)||1,cssW=Math.max(240,Math.round(cv.clientWidth||cv.width)),cssH=Math.round(cssW*aspect);
+cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);
+const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);return{g,w:cssW,h:cssH,dpr};
+}
+const ASPECT={errorChart:.62,lossChart:.62,sensitivityChart:.34};
 function chartFrame(id,title,maxY){
- const c=$(id),ctx=c.getContext("2d"),w=c.width,h=c.height;
- ctx.clearRect(0,0,w,h);ctx.fillStyle="#091c25";ctx.fillRect(0,0,w,h);
- ctx.strokeStyle="#31535e";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(54,18);ctx.lineTo(54,h-36);ctx.lineTo(w-16,h-36);ctx.stroke();
- ctx.fillStyle="#b0cbd1";ctx.font="13px system-ui";ctx.fillText(title,56,15);
- ctx.fillText("0",35,h-32);ctx.fillText(Math.ceil(maxY).toLocaleString(),6,34);
- return {ctx,w,h,x0:54,y0:h-36,plotW:w-75,plotH:h-69};
+const cv=$(id),f=fitCanvas(cv,ASPECT[id]||.5),g=f.g,w=f.w,h=f.h,p=pal();
+g.clearRect(0,0,w,h);g.fillStyle=p.bg;g.fillRect(0,0,w,h);
+g.strokeStyle=p.axis;g.lineWidth=1;g.beginPath();g.moveTo(54,24);g.lineTo(54,h-36);g.lineTo(w-16,h-36);g.stroke();
+g.fillStyle=p.text;g.font="13px "+FONT;g.fillText(title,56,16);
+g.fillText("0",38,h-32);g.fillText(Math.ceil(maxY).toLocaleString(),8,38);
+return {ctx:g,w,h,x0:54,y0:h-36,plotW:w-75,plotH:h-69,pal:p};
 }
+function emptySensitivity(){const p=chartFrame("sensitivityChart","Candidates at nearby thresholds",1);p.ctx.fillStyle=p.pal.text;p.ctx.font="14px "+FONT;p.ctx.textAlign="center";p.ctx.fillText("Count a photo to fill in this chart",p.w/2,p.h/2);p.ctx.textAlign="start"}
 function drawSensitivity(values){
- const max=Math.max(1,...values.map(d=>d.count))*1.12,p=chartFrame("sensitivityChart","Candidate counts vs threshold",max);
- p.ctx.beginPath();p.ctx.strokeStyle="#5ee6bf";p.ctx.lineWidth=3;
- values.forEach((d,i)=>{const x=p.x0+i*p.plotW/(values.length-1),y=p.y0-d.count/max*p.plotH;i?p.ctx.lineTo(x,y):p.ctx.moveTo(x,y)});p.ctx.stroke();
- values.forEach((d,i)=>{const x=p.x0+i*p.plotW/(values.length-1),y=p.y0-d.count/max*p.plotH;p.ctx.beginPath();p.ctx.fillStyle=i===2?"#ffcb84":"#5ee6bf";p.ctx.arc(x,y,5,0,7);p.ctx.fill();p.ctx.font="12px system-ui";p.ctx.fillStyle="#b0cbd1";p.ctx.textAlign="center";p.ctx.fillText(Math.round(d.scale*100)+"%",x,p.y0+18);p.ctx.textAlign="start";});
+lastSensitivity=values;
+const max=Math.max(1,...values.map(d=>d.count))*1.12,p=chartFrame("sensitivityChart","Candidates at nearby thresholds",max),k=p.pal;
+const X=i=>p.x0+20+i*(p.plotW-40)/(values.length-1),Y=v=>p.y0-v/max*p.plotH;
+p.ctx.beginPath();p.ctx.strokeStyle=k.a;p.ctx.lineWidth=2.5;
+values.forEach((d,i)=>{i?p.ctx.lineTo(X(i),Y(d.count)):p.ctx.moveTo(X(i),Y(d.count))});p.ctx.stroke();
+values.forEach((d,i)=>{p.ctx.beginPath();p.ctx.fillStyle=i===2?k.hi:k.a;p.ctx.arc(X(i),Y(d.count),5,0,Math.PI*2);p.ctx.fill();p.ctx.font="12px "+FONT;p.ctx.fillStyle=k.text;p.ctx.textAlign="center";p.ctx.fillText(d.t.toFixed(3),X(i),p.y0+18);p.ctx.fillText(d.count.toLocaleString(),X(i),Y(d.count)-10);p.ctx.textAlign="start"});
 }
 function drawBenchmarks(){
- const vals=[12.57,14.85],max=18,p=chartFrame("errorChart","Mean absolute error per 128px tile",max);
- vals.forEach((v,i)=>{const x=p.x0+80+i*220,h=v/max*p.plotH;p.ctx.fillStyle=i?"#ffcb84":"#5ee6bf";p.ctx.fillRect(x,p.y0-h,95,h);p.ctx.fillStyle="#eaf8f5";p.ctx.font="bold 19px system-ui";p.ctx.fillText(v.toFixed(2),x+16,p.y0-h-10);p.ctx.font="13px system-ui";p.ctx.fillText(i?"Ridge":"CNN",x+20,p.y0+21)});
- const loss=[1.387112,1.382534,1.378919,1.376305,1.365835,1.364534,1.350200,1.354985,1.374703,1.350609,1.371330,1.371043,1.364776,1.339180,1.332072,1.329823,1.319631,1.319767,1.314231,1.307048,1.307286,1.322530,1.367520,1.309394,1.319520,1.257501,1.242444,1.272802,1.269222,1.252231,1.229913,1.230939];
- const q=chartFrame("lossChart","Training loss · 32 epochs",1.5);q.ctx.beginPath();q.ctx.strokeStyle="#5ee6bf";q.ctx.lineWidth=3;
- loss.forEach((v,i)=>{const x=q.x0+i*q.plotW/(loss.length-1),y=q.y0-v/1.5*q.plotH;i?q.ctx.lineTo(x,y):q.ctx.moveTo(x,y)});q.ctx.stroke();
- q.ctx.fillStyle="#b0cbd1";q.ctx.font="12px system-ui";q.ctx.fillText("Epoch 1",q.x0,q.y0+20);q.ctx.fillText("Epoch 32",q.w-94,q.y0+20);
+const vals=[12.57,14.85],max=18,p=chartFrame("errorChart","Mean absolute error per 128 px tile",max),k=p.pal;
+const bw=Math.min(90,p.plotW/4);vals.forEach((v,i)=>{const cx=p.x0+p.plotW*(i?0.72:0.3),x=cx-bw/2,h=v/max*p.plotH;p.ctx.fillStyle=i?k.b:k.a;p.ctx.fillRect(x,p.y0-h,bw,h);p.ctx.fillStyle=k.text;p.ctx.font="600 16px "+FONT;p.ctx.textAlign="center";p.ctx.fillText(v.toFixed(2),cx,p.y0-h-8);p.ctx.font="13px "+FONT;p.ctx.fillText(i?"Ridge":"CNN",cx,p.y0+20);p.ctx.textAlign="start"});
+const loss=[1.387112,1.382534,1.378919,1.376305,1.365835,1.364534,1.350200,1.354985,1.374703,1.350609,1.371330,1.371043,1.364776,1.339180,1.332072,1.329823,1.319631,1.319767,1.314231,1.307048,1.307286,1.322530,1.367520,1.309394,1.319520,1.257501,1.242444,1.272802,1.269222,1.252231,1.229913,1.230939];
+const q=chartFrame("lossChart","Training loss over 32 epochs",1.5),kq=q.pal;q.ctx.beginPath();q.ctx.strokeStyle=kq.a;q.ctx.lineWidth=2.5;
+loss.forEach((v,i)=>{const x=q.x0+i*q.plotW/(loss.length-1),y=q.y0-v/1.5*q.plotH;i?q.ctx.lineTo(x,y):q.ctx.moveTo(x,y)});q.ctx.stroke();
+q.ctx.fillStyle=kq.text;q.ctx.font="12px "+FONT;q.ctx.fillText("Epoch 1",q.x0,q.y0+20);q.ctx.fillText("Epoch 32",q.w-70,q.y0+20);
 }
 $("analyze").onclick=()=>{
- if(!analysisReady)return;
- const threshold=Number($("sensitivity").value)/100;
- pts=peakCandidates.filter(p=>p.score>=threshold);
- const factors=[-.03,-.015,0,.015,.03];
- const results=factors.map(d=>({scale:(threshold+d)/threshold,count:peakCandidates.filter(p=>p.score>=threshold+d).length}));
- draw();scatter();drawSensitivity(results);$("downloadSummary").disabled=false;
- const low=Math.min(...results.map(x=>x.count)),high=Math.max(...results.map(x=>x.count));
- $("count").textContent=pts.length.toLocaleString();$("instantCount").textContent=pts.length.toLocaleString();
- $("instantRange").textContent=low.toLocaleString()+" – "+high.toLocaleString();
- $("progress").style.width="100%";
+if(!analysisReady)return;
+const threshold=Number($("sensitivity").value)/100;
+pts=peakCandidates.filter(p=>p.score>=threshold);
+const offsets=[-.03,-.015,0,.015,.03];
+const results=offsets.map(d=>({t:threshold+d,count:peakCandidates.filter(p=>p.score>=threshold+d).length}));
+draw();scatter();drawSensitivity(results);$("downloadSummary").disabled=false;
+const low=Math.min(...results.map(x=>x.count)),high=Math.max(...results.map(x=>x.count));
+$("count").textContent=pts.length.toLocaleString();$("instantCount").textContent=pts.length.toLocaleString();
+$("instantRange").textContent=low.toLocaleString()+" to "+high.toLocaleString();
+$("progress").style.width="100%";
 };
-drawBenchmarks();
 $("downloadSummary").onclick=()=>{
- if(!analysisReady)return;
- const t=Number($("sensitivity").value)/100;
- const counts=[t-.03,t,t+.03].map(v=>peakCandidates.filter(p=>p.score>=v).length);
- const rows=[
-  ["metric","value"],["method","trained PyTorch CNN (browser TensorFlow.js)"],
-  ["trained_threshold",t],["estimated_candidate_centers",pts.length],
-  ["threshold_sensitivity_min",Math.min(...counts)],["threshold_sensitivity_max",Math.max(...counts)],
-  ["interval_type","uncalibrated model sensitivity; NOT a 95% confidence interval"],
-  ["validation","not independently verified"]
- ];
- const csv=rows.map(row=>row.join(",")).join("\n");
- const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
- const a=document.createElement("a");a.href=url;a.download="barnacleai_cnn_results.csv";a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1000);
+if(!analysisReady)return;
+const t=Number($("sensitivity").value)/100;
+const counts=[t-.03,t,t+.03].map(v=>peakCandidates.filter(p=>p.score>=v).length);
+const rows=[
+["metric","value"],["method","trained PyTorch CNN (browser TensorFlow.js)"],
+["threshold",t],["estimated_candidate_centers",pts.length],
+["threshold_sensitivity_min",Math.min(...counts)],["threshold_sensitivity_max",Math.max(...counts)],
+["max_cnn_score",scoreInfo?scoreInfo.max:""],["mean_cnn_score",scoreInfo?scoreInfo.mean:""],
+["analyzed_size",W+"x"+H],["image_scale",imageScale],
+["interval_type","uncalibrated model sensitivity; NOT a 95% confidence interval"],
+["validation","not independently verified"]
+];
+const csv=rows.map(row=>row.join(",")).join("\n");
+const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+const a=document.createElement("a");a.href=url;a.download="barnacleai_cnn_results.csv";a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 function scatter(){
- const w=500,h=300;plot.clearRect(0,0,w,h);plot.fillStyle="#091b24";plot.fillRect(0,0,w,h);
- plot.strokeStyle="#33545d";plot.beginPath();plot.moveTo(60,245);plot.lineTo(445,245);plot.moveTo(60,245);plot.lineTo(135,100);plot.moveTo(60,245);plot.lineTo(60,40);plot.stroke();
- const cells=8;let counts=Array(cells*cells).fill(0);
- for(const p of pts){let x=Math.min(7,Math.floor(p.x/W*cells)),y=Math.min(7,Math.floor(p.y/H*cells));counts[y*cells+x]++}
- const max=Math.max(1,...counts);
- for(let yi=0;yi<8;yi++)for(let xi=0;xi<8;xi++){
-  let v=counts[yi*8+xi],xx=95+xi*41+yi*11,yy=242-yi*14-(v/max)*150;
-  plot.fillStyle="hsl("+(145+(v/max)*42)+" 75% "+(48+v/max*12)+"%)";plot.beginPath();plot.arc(xx,yy,2.8+2.3*v/max,0,7);plot.fill()
- }
- plot.fillStyle="#a9cad0";plot.font="12px system-ui";plot.fillText("X →",436,257);plot.fillText("Density ↑",10,25);plot.fillText("Y ↗",121,99);
+const cv=$("scatter"),dpr=(typeof window!=="undefined"&&window.devicePixelRatio)||1,cssW=Math.max(240,Math.round(cv.clientWidth||cv.width)),sc=cssW/500;
+cv.width=Math.round(cssW*dpr);cv.height=Math.round(300*sc*dpr);plot.setTransform(dpr*sc,0,0,dpr*sc,0,0);
+const w=500,h=300,k=pal(),fs=Math.round(12/sc);plot.clearRect(0,0,w,h);plot.fillStyle=k.bg;plot.fillRect(0,0,w,h);
+plot.strokeStyle=k.axis;plot.lineWidth=1;plot.beginPath();plot.moveTo(60,245);plot.lineTo(445,245);plot.moveTo(60,245);plot.lineTo(135,100);plot.moveTo(60,245);plot.lineTo(60,40);plot.stroke();
+const cells=8;let counts=Array(cells*cells).fill(0);
+for(const p of pts){let x=Math.min(7,Math.floor(p.x/W*cells)),y=Math.min(7,Math.floor(p.y/H*cells));counts[y*cells+x]++}
+const max=Math.max(1,...counts);
+for(let yi=0;yi<8;yi++)for(let xi=0;xi<8;xi++){
+let v=counts[yi*8+xi],xx=95+xi*41+yi*11,yy=242-yi*14-(v/max)*150;
+plot.globalAlpha=.35+.65*v/max;plot.fillStyle=k.a;plot.beginPath();plot.arc(xx,yy,2.8+2.3*v/max,0,Math.PI*2);plot.fill();plot.globalAlpha=1;
 }
-scatter();
+plot.fillStyle=k.text;plot.font=fs+"px "+FONT;plot.fillText("x",440,245+fs+4);plot.fillText("Candidates",12,30);plot.fillText("y",124,94);
+}
 function makeReview(){
- review=[];const used=new Set();let k=20261012;
- function rand(){k=(1664525*k+1013904223)>>>0;return k/4294967296}
- while(review.length<n){let i=Math.floor(rand()*N);if(!used.has(i)){used.add(i);review.push(i)}}
- $("tileinputs").innerHTML="";
- review.forEach((i,j)=>{
-  const box=document.createElement("div");box.className="sample";
-  const lab=document.createElement("label");lab.textContent="Tile "+(i+1);
-  const pos=document.createElement("kbd");pos.textContent="row "+(Math.floor(i/8)+1)+", col "+(i%8+1);
-  const inp=document.createElement("input");inp.type="number";inp.min="0";inp.step="1";inp.placeholder="Manual count";inp.id="t"+i;
-  const btn=document.createElement("button");btn.className="secondary";btn.type="button";btn.style.padding="5px";btn.textContent="View tile";
-  btn.onclick=()=>{draw();const tw=W/8,th=H/8,x=i%8*tw,y=Math.floor(i/8)*th;ctx.lineWidth=Math.max(2,W/300);ctx.strokeStyle="#ffd88d";ctx.strokeRect(x,y,tw,th)};
-  box.append(lab,pos,inp,btn);$("tileinputs").append(box);
- });
- $("interval").textContent="Enter all 12 independent manual counts to calculate an approximate 95% interval.";
-};
+review=[];const used=new Set();let k=20261012;
+function rand(){k=(1664525*k+1013904223)>>>0;return k/4294967296}
+while(review.length<n){let i=Math.floor(rand()*N);if(!used.has(i)){used.add(i);review.push(i)}}
+$("tileinputs").innerHTML="";
+review.forEach(i=>{
+const box=document.createElement("div");box.className="sample";
+const lab=document.createElement("label");lab.textContent="Tile "+(i+1);lab.htmlFor="t"+i;
+const pos=document.createElement("kbd");pos.textContent="Row "+(Math.floor(i/8)+1)+", column "+(i%8+1);
+const inp=document.createElement("input");inp.type="number";inp.min="0";inp.step="1";inp.placeholder="Your count";inp.id="t"+i;
+const btn=document.createElement("button");btn.className="secondary";btn.type="button";btn.textContent="Show tile";
+btn.onclick=()=>{draw();const tw=W/8,th=H/8,x=i%8*tw,y=Math.floor(i/8)*th;ctx.lineWidth=Math.max(2,W/300);ctx.strokeStyle="#f1c40f";ctx.strokeRect(x,y,tw,th)};
+box.append(lab,pos,inp,btn);$("tileinputs").append(box);
+});
+$("interval").className="note";$("interval").textContent="Enter all 12 counts to calculate the interval.";
+}
 function values(){return review.map(i=>Number($("t"+i)?.value)).filter((v,j)=>$("t"+review[j])?.value!==""&&Number.isInteger(v)&&v>=0)}
 $("estimate").onclick=()=>{
- const y=values();if(y.length!==n){$("interval").textContent="Please complete all 12 valid whole-number manual counts.";return}
- const mean=y.reduce((a,b)=>a+b,0)/n;
- const variance=y.reduce((a,b)=>a+(b-mean)**2,0)/(n-1);
- const se=N*Math.sqrt((1-n/N)*variance/n);
- const margin=2.201*se,est=N*mean;
- $("interval").textContent="Manual-sampling estimate: "+Math.round(est).toLocaleString()+" barnacles | Approximate 95% interval: "+Math.max(0,Math.round(est-margin)).toLocaleString()+" to "+Math.round(est+margin).toLocaleString()+". Approximation assumes independent, accurate manual counts of selected tiles; the interval can be unreliable with strongly skewed counts.";
- $("interval").className="good";
+const y=values();if(y.length!==n){$("interval").className="warn";$("interval").textContent="Fill in all 12 tiles with whole numbers first.";return}
+const mean=y.reduce((a,b)=>a+b,0)/n;
+const variance=y.reduce((a,b)=>a+(b-mean)**2,0)/(n-1);
+const se=N*Math.sqrt((1-n/N)*variance/n);
+const margin=2.201*se,est=N*mean;
+$("interval").textContent="Estimated total from your counts: "+Math.round(est).toLocaleString()+" barnacles. Approximate 95% interval: "+Math.max(0,Math.round(est-margin)).toLocaleString()+" to "+Math.round(est+margin).toLocaleString()+". This assumes your tile counts are accurate, and it can be off when counts are very uneven across tiles.";
+$("interval").className="good";
 };
 $("export").onclick=()=>{
- const rows=["tile_id,row,column,manual_count"];
- review.forEach(i=>rows.push([i+1,Math.floor(i/8)+1,i%8+1,$("t"+i).value].join(",")));
- const url=URL.createObjectURL(new Blob([rows.join("\n")],{type:"text/csv"}));
- const a=document.createElement("a");a.href=url;a.download="barnacleai_manual_review.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+const rows=["tile_id,row,column,manual_count"];
+review.forEach(i=>rows.push([i+1,Math.floor(i/8)+1,i%8+1,$("t"+i).value].join(",")));
+const url=URL.createObjectURL(new Blob([rows.join("\n")],{type:"text/csv"}));
+const a=document.createElement("a");a.href=url;a.download="barnacleai_manual_review.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
 };
+function redrawCharts(){drawBenchmarks();scatter();if(lastSensitivity)drawSensitivity(lastSensitivity);else emptySensitivity();if(baseImage)draw();else placeholder()}
+redrawCharts();
+if(window.matchMedia){const mq=window.matchMedia("(prefers-color-scheme: dark)");if(mq.addEventListener)mq.addEventListener("change",redrawCharts);else if(mq.addListener)mq.addListener(redrawCharts)}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redrawCharts);
+let resizeTimer=0;window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{drawBenchmarks();scatter();if(lastSensitivity)drawSensitivity(lastSensitivity);else emptySensitivity()},150)});
+window.addEventListener("load",()=>{const problem=setupProblem();if(problem){showWarn(problem);$("instantStatus").textContent="The CNN can't run on this page yet. See the note below."}});
 </script>
-</body></html>
+</body>
+</html>
