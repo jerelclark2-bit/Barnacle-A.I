@@ -1,0 +1,6 @@
+.git
+.venv
+__pycache__
+.pytest_cache
+results/feedback.jsonl
+results/manual_review
