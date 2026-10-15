@@ -1,21 +1,47 @@
-# BarnacleAI web deployment status
+# Running BarnacleAI
 
-## Public browser prototype
+## Browser demo
 
-The repository's `index.html` contains an interactive static demo that runs entirely in the browser. It supports image upload, hand-engineered COSC 3 image features, an exploratory *untrained* candidate detector, and manually entered counts with a sampling-based interval.
+**[Open BarnacleAI](https://jerelclark2-bit.github.io/Barnacle-A.I/)**
 
-This browser site **does not run the trained PyTorch model**. It intentionally distinguishes the experimental heuristic from validated CNN inference.
+Upload a JPG or PNG cropped to the inside of the frame. The website shows proposed barnacle centers, a count, a threshold-sensitivity range, and some image features. You can also manually count 12 randomly selected tiles to estimate a total with an approximate sampling interval.
 
-To preview the site from GitHub, use the HTMLPreview tool with this URL:
+The website uses the **trained 32-epoch CNN**. `inference.js` loads its exported PyTorch weights from `model_weights.json` and runs inference in your browser using TensorFlow.js. The image stays on your computer. TensorFlow.js itself loads from a CDN, so you'll need an internet connection, at least on first load.
 
-https://htmlpreview.github.io/?https://raw.githubusercontent.com/jerelclark2-bit/Barnacle-A.I/main/index.html
+This is experimental. A green circle is a possible barnacle center, **not proof of a barnacle**. The number shown is not a scientifically validated population count. The threshold range is **not** a 95% confidence interval. For the actual study results and limitations, see [RESULTS.md](RESULTS.md).
 
-## Full neural-network website
+## Hosting the browser page
 
-The complete Python project is packaged separately as `BarnacleAI_live_deploy_ready.zip` in the originating ChatGPT conversation. Its Streamlit entrypoint is `app.py` and its trained CNN and Ridge artifacts are in `results/`. The complete application still needs deployment on a Python host such as Render or Streamlit Community Cloud.
+This repository is set up for GitHub Pages from the `main` branch, **/(root)**. The site's starting point is `index.html`. Keep these files next to it:
 
-For actual publication, upload the extracted contents of `BarnacleAI/` to the repository and deploy using `render.yaml` or the Streamlit entrypoint. Ensure package dependencies and checkpoints are available on the server. Test an uploaded image and check server logs before distributing a public URL.
+- `inference.js`: browser inference code.
+- `model_weights.json`: trained CNN weights.
 
-## Scientific qualification
+If you're testing it locally, serve the repository folder instead of double-clicking `index.html`:
 
-CNN detections and tile MAE were evaluated against incomplete annotation outlines, **not** independently verified biological counts. A statistically defensible population count interval requires manual ground-truth review.
+```bash
+python3 -m http.server 8000
+```
+
+Open `http://localhost:8000`.
+
+## Full Python version
+
+The browser demo and the Python app are two frontends for the project. The browser runs the CNN only; the Python code also includes a Ridge regression baseline, analysis scripts, and a Streamlit dashboard. GitHub Pages **cannot run** Streamlit or FastAPI.
+
+To use the Python dashboard locally, with Python 3.11+:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+The API can be started separately with `uvicorn api:app --reload`. The included checkpoints live in `results/`.
+
+Automated tests run on GitHub Actions. The browser-assets test also checks that the exported weights aren't missing or malformed. Passing tests doesn't replace a real image-by-image accuracy evaluation.
+
+## What still needs real research
+
+The dataset has two labeled photographs, and the provided outlines are incomplete. The reported CNN and Ridge errors are against those imperfect annotations, **not independently verified barnacle counts**. To support an interval for a real count, a person must manually check the randomly selected tiles. See [RESULTS.md](RESULTS.md).

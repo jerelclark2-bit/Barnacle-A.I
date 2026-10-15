@@ -6,6 +6,10 @@ This is my project for the **DALI 26F Data Challenge**. I tried two approaches, 
 
 It's a prototype, not a magic barnacle counter. Here's how it works.
 
+**[Try the browser demo](https://jerelclark2-bit.github.io/Barnacle-A.I/)** · [How to run it](README_DEPLOY.md)
+
+The browser demo runs the exported trained CNN weights with TensorFlow.js. Your photos stay in your browser; loading TensorFlow.js requires an internet connection. The Python/Streamlit dashboard below is a separate app.
+
 ## What's in here
 
 - Extracts approximate barnacle-center annotations from supplied blue contour masks. Annotations are imperfect/incomplete and **must not be equated with exact population ground truth**.
