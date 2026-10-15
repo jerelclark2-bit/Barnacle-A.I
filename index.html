@@ -28,6 +28,13 @@ h2{font-size:22px;margin:34px 0 15px}h3{margin:4px 0 10px;font-size:17px}
 .samplebox{max-height:280px;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.sample{padding:10px;background:#122c34;border:1px solid #27505b;border-radius:8px;display:grid;gap:5px}.sample input{width:100%;background:#061821;border:1px solid #42626b;color:white;border-radius:7px;padding:8px;font:inherit}
 kbd{font-size:11px;color:var(--mint)}footer{margin-top:40px;border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:12px}
 @media(max-width:900px){.two,.grid{grid-template-columns:1fr}h1{letter-spacing:-2px}main{padding-top:20px}}
+
+.instant-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin:16px 0 24px}
+.stat-xl{font-size:clamp(42px,6vw,72px);font-weight:850;line-height:1.07;letter-spacing:-2px;color:var(--mint)}
+.chart{width:100%;height:auto;min-height:185px;background:#091c25;border-radius:11px}
+.result-note{color:var(--muted);font-size:13px;line-height:1.7}
+.placeholder-result{color:var(--muted);font-size:17px;padding:12px 0}
+@media(max-width:850px){.instant-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -38,17 +45,33 @@ kbd{font-size:11px;color:var(--mint)}footer{margin-top:40px;border-top:1px solid
 <p>Explore the image features behind barnacle counting, visualize candidate detections, and estimate uncertainty from independent human review. The trained PyTorch CNN is a separate Python model; this lightweight browser demo uses an explicitly labeled image-processing heuristic.</p>
 <div><span class="pill">PyTorch CNN experiment</span><span class="pill">COSC 3 feature engineering</span><span class="pill">Human-in-the-loop</span><span class="pill">Transparent uncertainty</span></div>
 </section>
-<section id="research"><div class="grid">
+<section id="instant"><h2>⚡ Automatic barnacle estimate</h2><p class="result-note">Upload a cropped image. The browser automatically detects candidates, displays an estimate and shows how sensitive it is to the detection threshold. Human counting is OPTIONAL.</p>
+<div class="instant-grid">
+<div class="panel"><div class="eyebrow">Automatic first pass · experimental visual heuristic</div>
+<div id="instantCount" class="stat-xl">—</div>
+<div class="label">Estimated candidate points in the uploaded image</div>
+<div style="margin-top:18px" class="eyebrow">Automatic sensitivity range</div><div id="instantRange" style="font-size:29px;font-weight:750;margin:3px 0 5px">—</div>
+<div id="instantStatus" class="result-note">Upload a photograph below to generate results immediately.</div>
+<div class="warn">This is <b>not a statistically validated 95% confidence interval</b>. It shows how the browser heuristic's count changes with its sensitivity. The actual trained CNN is not running on GitHub Pages. A 95% sampling interval becomes available after optional human spot checks below.</div>
+</div>
+<div class="panel"><h3>Model sensitivity plot</h3><canvas id="sensitivityChart" class="chart" width="600" height="280" aria-label="How estimated count varies with detector threshold"></canvas>
+<p class="mini">X: detector threshold relative to chosen setting · Y: candidate detections. The spread is <b>model sensitivity, not measured prediction error.</b></p>
+</div></div></section>
+<section id="research"><h2>📊 Model evaluation and error</h2><div class="grid">
 <div class="card"><div class="label">Retrained CNN candidates on held-out photo</div><div class="stat">1,104</div><div class="mini">Not a verified biological count</div></div>
 <div class="card"><div class="label">CNN MAE per evaluation tile</div><div class="stat">12.57</div><div class="mini">Compared with incomplete blue labels</div></div>
 <div class="card"><div class="label">Feature-based Ridge MAE per tile</div><div class="stat">14.85</div><div class="mini">Same annotation-derived benchmark</div></div>
+</div>
+<div class="two" style="margin:18px 0 24px">
+<div class="panel"><h3>Held-out tile error comparison</h3><canvas id="errorChart" class="chart" width="600" height="280" aria-label="Comparison of CNN and ridge regression tile mean absolute errors"></canvas><p class="mini">Measured against incomplete blue annotation masks on a held-out photograph. These numbers are <b>not verified biological counting errors.</b></p></div>
+<div class="panel"><h3>CNN training-loss curve</h3><canvas id="lossChart" class="chart" width="600" height="280" aria-label="CNN training loss by epoch"></canvas><p class="mini">Training loss tracks optimization over 32 epochs; a decreasing curve does not establish accuracy on new images.</p></div>
 </div></section>
 <section id="explore"><div class="row"><h2>Interactive image laboratory</h2><span class="mini">All uploaded images remain in your browser</span></div>
 <div class="two">
 <div class="panel"><h3>01 · Inspect an image</h3><p class="mini">Choose an image already cropped to the <b>inner green square</b>. Barnacles touching a tile boundary are counted by their estimated centers.</p>
-<div class="control"><label for="upload">Upload a barnacle photograph (JPG / PNG)</label><input type="file" id="upload" accept="image/png,image/jpeg"><div class="mini">The browser runs a simple edge-peak heuristic for interactive exploration, not the trained CNN.</div></div>
+<div class="control"><label for="upload">Upload a barnacle photograph (JPG / PNG)</label><input type="file" id="upload" accept="image/png,image/jpeg"><div class="mini">Automatic analysis runs immediately after upload. The detector is an untrained edge-peak heuristic, NOT your saved trained CNN.</div></div>
 <canvas id="photo" class="viewer" width="800" height="500" aria-label="Barnacle analysis image"></canvas>
-<div class="row" style="margin-top:13px"><button id="analyze" disabled>Run exploratory detection</button><label class="mini">Sensitivity <input id="sensitivity" type="range" min="30" max="130" value="73" style="vertical-align:middle"> <span id="slabel">73</span></label></div>
+<div class="row" style="margin-top:13px"><button id="analyze" disabled>Recalculate estimate</button><label class="mini">Sensitivity <input id="sensitivity" type="range" min="30" max="130" value="73" style="vertical-align:middle"> <span id="slabel">73</span></label></div>
 <div class="warn">⚠️ This web demo's point detector is an <b>untrained visual heuristic</b>. Its detections are not the saved PyTorch CNN's predictions. For trained-model inference use the Python app in the source project.</div>
 </div>
 <div class="panel"><h3>02 · COSC 3 image features</h3><div class="metricrow">
@@ -61,7 +84,7 @@ kbd{font-size:11px;color:var(--mint)}footer{margin-top:40px;border-top:1px solid
 <h3>03 · Spatial distribution</h3><canvas id="scatter" width="500" height="300"></canvas><p class="mini">Experimental 3D projection: x/y are image coordinates; height represents local candidate density. This is not confidence or a prediction interval.</p>
 </div>
 </div></section>
-<section id="validation"><h2>Human verification & sampling interval</h2><div class="panel"><p>After uploading an image, review twelve reproducibly selected tiles from an 8 × 8 grid. Enter your <b>manual count</b> for each tile. The tool can then estimate the total count and an approximate 95% sampling interval using the finite-population correction. This interval is not a neural-network confidence score.</p>
+<section id="validation"><h2>✅ Optional: human verification & statistical 95% interval</h2><div class="panel"><p>For a statistically grounded interval, optionally review twelve reproducibly selected tiles from an 8 × 8 grid. Enter your <b>manual count</b> for each tile. The tool can then estimate the total count and an approximate 95% sampling interval using the finite-population correction. This interval is not a neural-network confidence score.</p>
 <div id="tileinputs" class="samplebox"><p class="mini">Upload an image to prepare review tiles.</p></div>
 <div class="row" style="margin-top:16px"><button id="estimate" disabled>Calculate 95% sampling interval</button><button id="export" class="secondary" disabled>Export review CSV</button></div>
 <div id="interval" class="warn">Waiting for manual counts. We will not invent an interval before independent verification.</div></div></section>
@@ -91,6 +114,7 @@ $("upload").addEventListener("change",async e=>{
   pts=[];draw();features();makeReview();$("analyze").disabled=false;$("estimate").disabled=false;$("export").disabled=false;
   $("dims").textContent=W+"×"+H;$("count").textContent="—";$("progress").style.width="30%";
   URL.revokeObjectURL(url);
+  $("analyze").click();
  };
  im.onerror=()=>{URL.revokeObjectURL(url);alert("Could not read image.")};im.src=url;
 });
@@ -110,26 +134,61 @@ function draw(){
  ctx.strokeStyle="#67f2be";ctx.lineWidth=1.3;
  for(const p of pts){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.stroke()}
 }
-$("analyze").onclick=()=>{
- if(!rgba)return;
- const stride=6,r=4,threshold=Number($("sensitivity").value)/1000;
+function detectAt(threshold){
+ if(!rgba)return [];
+ const stride=6,r=4;
  let candidates=[];
  for(let y=r+2;y<H-r-2;y+=stride)for(let x=r+2;x<W-r-2;x+=stride){
   const z=grayAt(x,y),dx=Math.abs(grayAt(x-r,y)-grayAt(x+r,y)),dy=Math.abs(grayAt(x,y-r)-grayAt(x,y+r));
   const edge=(dx+dy)/2;
   if(edge>threshold&&z>.08)candidates.push({x,y,score:edge});
  }
- candidates.sort((a,b)=>b.score-a.score);pts=[];
- const cell=13,occupied=new Set();
+ candidates.sort((a,b)=>b.score-a.score);
+ const found=[],cell=13,occupied=new Set();
  for(const p of candidates){
   const gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell),key=gy*10000+gx;
   if(occupied.has(key))continue;
-  pts.push(p);
+  found.push(p);
   for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)occupied.add((gy+oy)*10000+gx+ox);
-  if(pts.length>7000)break;
+  if(found.length>=7000)break;
  }
- draw();scatter();$("count").textContent=pts.length.toLocaleString();$("progress").style.width="100%";
+ return found;
+}
+function chartFrame(id,title,maxY){
+ const c=$(id),ctx=c.getContext("2d"),w=c.width,h=c.height;
+ ctx.clearRect(0,0,w,h);ctx.fillStyle="#091c25";ctx.fillRect(0,0,w,h);
+ ctx.strokeStyle="#31535e";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(54,18);ctx.lineTo(54,h-36);ctx.lineTo(w-16,h-36);ctx.stroke();
+ ctx.fillStyle="#b0cbd1";ctx.font="13px system-ui";ctx.fillText(title,56,15);
+ ctx.fillText("0",35,h-32);ctx.fillText(Math.ceil(maxY).toLocaleString(),6,34);
+ return {ctx,w,h,x0:54,y0:h-36,plotW:w-75,plotH:h-69};
+}
+function drawSensitivity(values){
+ const max=Math.max(1,...values.map(d=>d.count))*1.12,p=chartFrame("sensitivityChart","Candidate counts vs threshold",max);
+ p.ctx.beginPath();p.ctx.strokeStyle="#5ee6bf";p.ctx.lineWidth=3;
+ values.forEach((d,i)=>{const x=p.x0+i*p.plotW/(values.length-1),y=p.y0-d.count/max*p.plotH;i?p.ctx.lineTo(x,y):p.ctx.moveTo(x,y)});p.ctx.stroke();
+ values.forEach((d,i)=>{const x=p.x0+i*p.plotW/(values.length-1),y=p.y0-d.count/max*p.plotH;p.ctx.beginPath();p.ctx.fillStyle=i===2?"#ffcb84":"#5ee6bf";p.ctx.arc(x,y,5,0,7);p.ctx.fill();p.ctx.font="12px system-ui";p.ctx.fillStyle="#b0cbd1";p.ctx.textAlign="center";p.ctx.fillText(Math.round(d.scale*100)+"%",x,p.y0+18);p.ctx.textAlign="start";});
+}
+function drawBenchmarks(){
+ const vals=[12.57,14.85],max=18,p=chartFrame("errorChart","Mean absolute error per 128px tile",max);
+ vals.forEach((v,i)=>{const x=p.x0+80+i*220,h=v/max*p.plotH;p.ctx.fillStyle=i?"#ffcb84":"#5ee6bf";p.ctx.fillRect(x,p.y0-h,95,h);p.ctx.fillStyle="#eaf8f5";p.ctx.font="bold 19px system-ui";p.ctx.fillText(v.toFixed(2),x+16,p.y0-h-10);p.ctx.font="13px system-ui";p.ctx.fillText(i?"Ridge":"CNN",x+20,p.y0+21)});
+ const loss=[1.387112,1.382534,1.37892,1.376305,1.365835,1.364534,1.3502,1.354985,1.374703,1.350609,1.371043,1.371043,1.364533,1.33918,1.332072,1.329823,1.319631,1.319767,1.314231,1.307049,1.309393,1.307286,1.32253,1.36752,1.309394,1.257501,1.242444,1.272802,1.269223,1.252232,1.229913,1.230939];
+ const q=chartFrame("lossChart","Training loss · 32 epochs",1.5);q.ctx.beginPath();q.ctx.strokeStyle="#5ee6bf";q.ctx.lineWidth=3;
+ loss.forEach((v,i)=>{const x=q.x0+i*q.plotW/(loss.length-1),y=q.y0-v/1.5*q.plotH;i?q.ctx.lineTo(x,y):q.ctx.moveTo(x,y)});q.ctx.stroke();
+ q.ctx.fillStyle="#b0cbd1";q.ctx.font="12px system-ui";q.ctx.fillText("Epoch 1",q.x0,q.y0+20);q.ctx.fillText("Epoch 32",q.w-94,q.y0+20);
+}
+$("analyze").onclick=()=>{
+ if(!rgba)return;
+ const threshold=Number($("sensitivity").value)/1000,scale=[0.8,0.9,1,1.1,1.2];
+ const results=scale.map(s=>({scale:s,count:detectAt(threshold*s).length}));
+ pts=detectAt(threshold);
+ draw();scatter();drawSensitivity(results);
+ const estimate=pts.length,low=Math.min(...results.map(x=>x.count)),high=Math.max(...results.map(x=>x.count));
+ $("count").textContent=estimate.toLocaleString();$("instantCount").textContent=estimate.toLocaleString();
+ $("instantRange").textContent=low.toLocaleString()+" – "+high.toLocaleString();
+ $("instantStatus").textContent="Automatic detection complete. Counts across ±20% threshold changes. This range is uncalibrated and should not be interpreted as a 95% interval for the true number of barnacles.";
+ $("progress").style.width="100%";
 };
+drawBenchmarks();
 function scatter(){
  const w=500,h=300;plot.clearRect(0,0,w,h);plot.fillStyle="#091b24";plot.fillRect(0,0,w,h);
  plot.strokeStyle="#33545d";plot.beginPath();plot.moveTo(60,245);plot.lineTo(445,245);plot.moveTo(60,245);plot.lineTo(135,100);plot.moveTo(60,245);plot.lineTo(60,40);plot.stroke();
