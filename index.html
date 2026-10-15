@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BarnacleAI • Computer Vision Research</title>
+<title>BarnacleAI · Upload, Count, Done</title>
 <meta name="description" content="Explore barnacle counts, image features, annotation uncertainty, and manually validated sampling estimates. DALI Data Challenge 26F.">
 <style>
 :root{color-scheme:dark;--bg:#08141c;--panel:#10232c;--line:#25434c;--light:#edf8f7;--muted:#a3bdc2;--mint:#5ee6bf;--amber:#ffcb84}
@@ -35,65 +35,107 @@ kbd{font-size:11px;color:var(--mint)}footer{margin-top:40px;border-top:1px solid
 .result-note{color:var(--muted);font-size:13px;line-height:1.7}
 .placeholder-result{color:var(--muted);font-size:17px;padding:12px 0}
 @media(max-width:850px){.instant-grid{grid-template-columns:1fr}}
+
+.hero {padding:26px 3px 14px}.hero h1{font-size:clamp(42px,6vw,72px)}.hero p{max-width:790px}
+.upload-card{background:#112b34;border:2px dashed #477e77;border-radius:19px;padding:20px 25px;margin:10px 0 21px}
+.upload-head{display:flex;gap:14px;align-items:center;margin-bottom:9px}.upload-head strong{font-size:18px}.upload-icon{font-size:33px}
+.upload-card input[type=file]{border-radius:8px;padding:5px;width:100%;max-width:700px}
+.top-grid{display:grid;grid-template-columns:.84fr 1.16fr;gap:16px;align-items:stretch;margin-bottom:13px}
+.result-panel,.preview-panel{background:linear-gradient(135deg,#112f39,#0b2029);border:1px solid var(--line);border-radius:19px;padding:25px}
+.main-number{font-size:clamp(64px,9vw,108px);font-weight:900;color:var(--mint);line-height:1.15;letter-spacing:-5px;margin:22px 0 4px}
+.range-number{font-size:clamp(27px,3vw,36px);font-weight:850;letter-spacing:-1px;margin:12px 0 10px}
+.separator{border-top:1px solid #34545d;margin:28px 0 21px}.chip{display:inline-block;border:1px solid #4e6e67;border-radius:99px;padding:3px 8px;font-size:10px;letter-spacing:0;text-transform:none;color:#c5d8d5}
+.preview-panel canvas{width:100%;max-height:430px;object-fit:contain}
+.caveat{font-size:12px;color:#a5c6cc;padding:0 5px 10px;line-height:1.7}
+.advanced{border:1px solid var(--line);border-radius:15px;margin:11px 0;background:#10242d;overflow:hidden}
+.advanced summary{padding:20px 22px;font-size:16px;font-weight:800;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.advanced summary:hover{background:#16343d}.advanced-body{padding:8px 22px 25px;border-top:1px solid var(--line)}
+.advanced .grid{margin-top:10px}
+@media(max-width:850px){.top-grid{grid-template-columns:1fr}.preview-panel{padding:16px}.result-panel{padding:18px}.advanced summary{font-size:14px}nav a:not(:last-child){display:none}}
 </style>
 </head>
 <body>
-<header><div class="brand">🐚 Barnacle<span>AI</span></div><nav><a href="#explore">Explore</a><a href="#research">Research results</a><a href="#validation">Validation</a><a href="https://github.com/jerelclark2-bit/Barnacle-A.I" target="_blank" rel="noopener">GitHub ↗</a></nav></header>
+
+<header><div class="brand">🐚 Barnacle<span>AI</span></div><nav><a href="#how">About</a><a href="https://github.com/jerelclark2-bit/Barnacle-A.I" target="_blank" rel="noopener">GitHub ↗</a></nav></header>
 <main>
-<section class="hero"><div class="eyebrow">Dartmouth · DALI 26F data challenge · research prototype</div>
-<h1>Count less.<br><span style="color:var(--mint)">Understand more.</span></h1>
-<p>Explore the image features behind barnacle counting, visualize candidate detections, and estimate uncertainty from independent human review. The trained PyTorch CNN is a separate Python model; this lightweight browser demo uses an explicitly labeled image-processing heuristic.</p>
-<div><span class="pill">PyTorch CNN experiment</span><span class="pill">COSC 3 feature engineering</span><span class="pill">Human-in-the-loop</span><span class="pill">Transparent uncertainty</span></div>
+<section class="hero">
+  <div class="eyebrow">BarnacleAI · DALI research prototype</div>
+  <h1>Upload. Count. <span style="color:var(--mint)">Done.</span></h1>
+  <p>Pick a photo and BarnacleAI immediately finds likely barnacles. No forms, no sliders, no counting by hand.</p>
 </section>
-<section id="instant"><h2>⚡ Automatic barnacle estimate</h2><p class="result-note">Upload a cropped image. The browser automatically detects candidates, displays an estimate and shows how sensitive it is to the detection threshold. Human counting is OPTIONAL.</p>
-<div class="instant-grid">
-<div class="panel"><div class="eyebrow">Automatic first pass · experimental visual heuristic</div>
-<div id="instantCount" class="stat-xl">—</div>
-<div class="label">Estimated candidate points in the uploaded image</div>
-<div style="margin-top:18px" class="eyebrow">Automatic sensitivity range</div><div id="instantRange" style="font-size:29px;font-weight:750;margin:3px 0 5px">—</div>
-<div id="instantStatus" class="result-note">Upload a photograph below to generate results immediately.</div>
-<div class="warn">This is <b>not a statistically validated 95% confidence interval</b>. It shows how the browser heuristic's count changes with its sensitivity. The actual trained CNN is not running on GitHub Pages. A 95% sampling interval becomes available after optional human spot checks below.</div>
-</div>
-<div class="panel"><h3>Model sensitivity plot</h3><canvas id="sensitivityChart" class="chart" width="600" height="280" aria-label="How estimated count varies with detector threshold"></canvas>
-<p class="mini">X: detector threshold relative to chosen setting · Y: candidate detections. The spread is <b>model sensitivity, not measured prediction error.</b></p>
-</div></div></section>
-<section id="research"><h2>📊 Model evaluation and error</h2><div class="grid">
-<div class="card"><div class="label">Retrained CNN candidates on held-out photo</div><div class="stat">1,104</div><div class="mini">Not a verified biological count</div></div>
-<div class="card"><div class="label">CNN MAE per evaluation tile</div><div class="stat">12.57</div><div class="mini">Compared with incomplete blue labels</div></div>
-<div class="card"><div class="label">Feature-based Ridge MAE per tile</div><div class="stat">14.85</div><div class="mini">Same annotation-derived benchmark</div></div>
-</div>
-<div class="two" style="margin:18px 0 24px">
-<div class="panel"><h3>Held-out tile error comparison</h3><canvas id="errorChart" class="chart" width="600" height="280" aria-label="Comparison of CNN and ridge regression tile mean absolute errors"></canvas><p class="mini">Measured against incomplete blue annotation masks on a held-out photograph. These numbers are <b>not verified biological counting errors.</b></p></div>
-<div class="panel"><h3>CNN training-loss curve</h3><canvas id="lossChart" class="chart" width="600" height="280" aria-label="CNN training loss by epoch"></canvas><p class="mini">Training loss tracks optimization over 32 epochs; a decreasing curve does not establish accuracy on new images.</p></div>
-</div></section>
-<section id="explore"><div class="row"><h2>Interactive image laboratory</h2><span class="mini">All uploaded images remain in your browser</span></div>
-<div class="two">
-<div class="panel"><h3>01 · Inspect an image</h3><p class="mini">Choose an image already cropped to the <b>inner green square</b>. Barnacles touching a tile boundary are counted by their estimated centers.</p>
-<div class="control"><label for="upload">Upload a barnacle photograph (JPG / PNG)</label><input type="file" id="upload" accept="image/png,image/jpeg"><div class="mini">Automatic analysis runs immediately after upload. The detector is an untrained edge-peak heuristic, NOT your saved trained CNN.</div></div>
-<canvas id="photo" class="viewer" width="800" height="500" aria-label="Barnacle analysis image"></canvas>
-<div class="row" style="margin-top:13px"><button id="analyze" disabled>Recalculate estimate</button><label class="mini">Sensitivity <input id="sensitivity" type="range" min="30" max="130" value="73" style="vertical-align:middle"> <span id="slabel">73</span></label></div>
-<div class="warn">⚠️ This web demo's point detector is an <b>untrained visual heuristic</b>. Its detections are not the saved PyTorch CNN's predictions. For trained-model inference use the Python app in the source project.</div>
-</div>
-<div class="panel"><h3>02 · COSC 3 image features</h3><div class="metricrow">
-<div><span class="label">Brightness density</span><strong id="density">—</strong></div>
-<div><span class="label">Horizontal center</span><strong id="cx">—</strong></div>
-<div><span class="label">Symmetry</span><strong id="sym">—</strong></div>
-<div><span class="label">Left-right balance</span><strong id="bal">—</strong></div></div>
-<div class="prog"><div id="progress" style="width:0"></div></div>
-<div class="metricrow"><div><span class="label">Heuristic candidate points</span><strong id="count">—</strong></div><div><span class="label">Image dimensions</span><strong id="dims">—</strong></div></div>
-<h3>03 · Spatial distribution</h3><canvas id="scatter" width="500" height="300"></canvas><p class="mini">Experimental 3D projection: x/y are image coordinates; height represents local candidate density. This is not confidence or a prediction interval.</p>
-</div>
-</div></section>
-<section id="validation"><h2>✅ Optional: human verification & statistical 95% interval</h2><div class="panel"><p>For a statistically grounded interval, optionally review twelve reproducibly selected tiles from an 8 × 8 grid. Enter your <b>manual count</b> for each tile. The tool can then estimate the total count and an approximate 95% sampling interval using the finite-population correction. This interval is not a neural-network confidence score.</p>
-<div id="tileinputs" class="samplebox"><p class="mini">Upload an image to prepare review tiles.</p></div>
-<div class="row" style="margin-top:16px"><button id="estimate" disabled>Calculate 95% sampling interval</button><button id="export" class="secondary" disabled>Export review CSV</button></div>
-<div id="interval" class="warn">Waiting for manual counts. We will not invent an interval before independent verification.</div></div></section>
-<section><h2>How the full Python system works</h2><div class="grid">
-<div class="card"><div class="eyebrow">Model A</div><h3>Deep learning</h3><p class="mini">A small PyTorch CNN predicts barnacle-center heatmaps, then converts local peaks into candidates. Trained on imperfect contour labels from one photograph.</p></div>
-<div class="card"><div class="eyebrow">Model B</div><h3>Ridge regression</h3><p class="mini">Image tiles are represented with brightness, centroid, symmetry, balance, edge density, and texture features, then regressed onto annotation-derived counts.</p></div>
-<div class="card"><div class="eyebrow">Human judgment</div><h3>Correct & verify</h3><p class="mini">Review problematic tiles and compute sampling-based uncertainty with human counts. Labels remain incomplete; the trained model has not yet been biologically validated.</p></div></div>
-<div class="good"><b>Reproducibility matters.</b> The model comparison, trained checkpoints and full Streamlit/FastAPI application are in the separately packaged Python project. This browser-only demonstration does not substitute for deploying that backend.</div>
+<section class="upload-card" aria-label="Upload barnacle photograph">
+  <div class="upload-head"><span class="upload-icon">📷</span><div><strong>Your photo goes here</strong><div class="mini">JPG or PNG · stays on your device · automatic results</div></div></div>
+  <input type="file" id="upload" accept="image/png,image/jpeg" aria-label="Upload your barnacle photograph"/>
 </section>
+<section class="top-grid" id="instant">
+  <div class="result-panel">
+    <div class="eyebrow">Automatic estimate <span class="chip">Experimental</span></div>
+    <div id="instantCount" class="main-number">—</div>
+    <div class="label">Likely barnacle candidates</div>
+    <div class="separator"></div>
+    <div class="eyebrow">Estimate sensitivity range</div>
+    <div id="instantRange" class="range-number">—</div>
+    <p id="instantStatus" class="mini">Upload a photo to see your result instantly.</p>
+    <button id="downloadSummary" class="secondary" disabled>↓ Save results</button>
+  </div>
+  <div class="preview-panel">
+    <div class="row" style="margin-bottom:10px"><strong>Detection preview</strong><span class="mini">Green dots = candidates</span></div>
+    <canvas id="photo" class="viewer" width="800" height="500" aria-label="Photo showing detected candidate barnacles"></canvas>
+    <div class="mini" style="margin-top:10px">This browser preview uses an image-processing heuristic, <b>not</b> the trained CNN. Counts are experimental.</div>
+  </div>
+</section>
+<div class="caveat">The range above reflects sensitivity to detector settings, not a statistically validated 95% confidence interval. The trained CNN and optional 95% sampling method are available in the separate full Python project.</div>
+<details class="advanced">
+  <summary><span>📊 Model graphs & detailed analysis</span><span class="mini">Optional — expand</span></summary>
+  <div class="advanced-body">
+    <section id="research">
+      <h2>Model research results</h2>
+      <div class="grid">
+        <div class="card"><div class="label">Trained CNN · held-out candidate detections</div><div class="stat">1,104</div><div class="mini">Not a verified biological count</div></div>
+        <div class="card"><div class="label">CNN benchmark tile MAE</div><div class="stat">12.57</div><div class="mini">Versus incomplete annotations</div></div>
+        <div class="card"><div class="label">Ridge benchmark tile MAE</div><div class="stat">14.85</div><div class="mini">Same incomplete annotations</div></div>
+      </div>
+      <div class="two" style="margin:18px 0">
+        <div class="panel"><h3>Model prediction error</h3><canvas id="errorChart" class="chart" width="600" height="280"></canvas><p class="mini">Lower is better. These are differences against incomplete annotation masks, not ground-truth biological error.</p></div>
+        <div class="panel"><h3>CNN training progress</h3><canvas id="lossChart" class="chart" width="600" height="280"></canvas><p class="mini">Decreasing training loss does not establish accuracy on unseen images.</p></div>
+      </div>
+      <div class="panel"><h3>How sensitive is this estimate?</h3><canvas id="sensitivityChart" class="chart" width="600" height="280"></canvas><p class="mini">Automatic candidate counts under different detection thresholds, not a 95% confidence interval.</p></div>
+    </section>
+    <section id="explore">
+      <h2>Image details</h2>
+      <div class="two">
+        <div class="panel">
+          <h3>Optional detection adjustments</h3>
+          <label class="mini">Sensitivity <input id="sensitivity" type="range" min="30" max="130" value="73" style="vertical-align:middle"><span id="slabel">73</span></label>
+          <button id="analyze">Recalculate</button>
+          <div class="prog" style="margin-top:14px"><div id="progress" style="width:0"></div></div>
+          <div class="metricrow"><div><span class="label">Candidate points</span><strong id="count">—</strong></div><div><span class="label">Image size</span><strong id="dims">—</strong></div></div>
+        </div>
+        <div class="panel">
+          <h3>Visual image features</h3><div class="metricrow">
+          <div><span class="label">Brightness</span><strong id="density">—</strong></div>
+          <div><span class="label">Horizontal center</span><strong id="cx">—</strong></div>
+          <div><span class="label">Symmetry</span><strong id="sym">—</strong></div>
+          <div><span class="label">Left-right balance</span><strong id="bal">—</strong></div></div>
+          <h3>Candidate location distribution</h3><canvas id="scatter" width="500" height="300" class="chart"></canvas>
+        </div>
+      </div>
+    </section>
+  </div>
+</details>
+<details class="advanced">
+ <summary><span>✅ Optional manual verification</span><span class="mini">Only if you want a 95% sampling interval</span></summary>
+ <div class="advanced-body" id="validation">
+   <p>For a design-based approximate 95% sampling interval, manually count barnacles in twelve randomly selected image tiles. This optional step estimates uncertainty from random sampling; it is not a calibrated CNN prediction interval.</p>
+   <div id="tileinputs" class="samplebox"><p class="mini">Upload an image to prepare tiles.</p></div>
+   <div class="row" style="margin-top:16px"><button id="estimate" disabled>Calculate 95% sampling interval</button><button id="export" class="secondary" disabled>Export review CSV</button></div>
+   <div id="interval" class="warn">Optional: no manual counts entered.</div>
+ </div>
+</details>
+<details class="advanced" id="how">
+  <summary><span>🔬 How the actual AI works</span><span class="mini">Methodology and limitations</span></summary>
+  <div class="advanced-body"><p>The full Python project trains a small PyTorch CNN that proposes barnacle center locations, and a Ridge regression model that estimates counts from engineered image features. It is separate from the lighter GitHub Pages browser preview.</p><p>Its sample of labeled photos is small, the labels are incomplete, and a reliable automatic 95% prediction interval needs independently validated data. This application never substitutes a polished graph for verified accuracy.</p></div>
+</details>
 <footer>BarnacleAI · Dartmouth DALI 26F · Experimental academic prototype. Outputs are not ecological measurements. <a href="https://github.com/jerelclark2-bit/Barnacle-A.I">Source repository</a>.</footer>
 </main>
 <script>
@@ -181,7 +223,7 @@ $("analyze").onclick=()=>{
  const threshold=Number($("sensitivity").value)/1000,scale=[0.8,0.9,1,1.1,1.2];
  const results=scale.map(s=>({scale:s,count:detectAt(threshold*s).length}));
  pts=detectAt(threshold);
- draw();scatter();drawSensitivity(results);
+ draw();scatter();drawSensitivity(results);$("downloadSummary").disabled=false;
  const estimate=pts.length,low=Math.min(...results.map(x=>x.count)),high=Math.max(...results.map(x=>x.count));
  $("count").textContent=estimate.toLocaleString();$("instantCount").textContent=estimate.toLocaleString();
  $("instantRange").textContent=low.toLocaleString()+" – "+high.toLocaleString();
@@ -189,6 +231,7 @@ $("analyze").onclick=()=>{
  $("progress").style.width="100%";
 };
 drawBenchmarks();
+$("downloadSummary").onclick=()=>{if(!rgba)return;const t=Number($("sensitivity").value)/1000,counts=[.8,.9,1,1.1,1.2].map(x=>detectAt(t*x).length);const csv="metric,value\nmethod,experimental browser heuristic\nestimated_candidates,"+pts.length+"\nsensitivity_min,"+Math.min(...counts)+"\nsensitivity_max,"+Math.max(...counts)+"\ninterval_type,uncalibrated threshold sensitivity (NOT 95% CI)";const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));const a=document.createElement("a");a.href=url;a.download="barnacleai_result.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 function scatter(){
  const w=500,h=300;plot.clearRect(0,0,w,h);plot.fillStyle="#091b24";plot.fillRect(0,0,w,h);
  plot.strokeStyle="#33545d";plot.beginPath();plot.moveTo(60,245);plot.lineTo(445,245);plot.moveTo(60,245);plot.lineTo(135,100);plot.moveTo(60,245);plot.lineTo(60,40);plot.stroke();
