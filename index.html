@@ -178,21 +178,26 @@ function draw(){
 }
 function detectAt(threshold){
  if(!rgba)return [];
- const stride=6,r=4;
- let candidates=[];
- for(let y=r+2;y<H-r-2;y+=stride)for(let x=r+2;x<W-r-2;x+=stride){
-  const z=grayAt(x,y),dx=Math.abs(grayAt(x-r,y)-grayAt(x+r,y)),dy=Math.abs(grayAt(x,y-r)-grayAt(x,y+r));
-  const edge=(dx+dy)/2;
-  if(edge>threshold&&z>.08)candidates.push({x,y,score:edge});
+ const candidates=[],stride=3;
+ for(let y=9;y<H-9;y+=stride)for(let x=9;x<W-9;x+=stride){
+  const z=grayAt(x,y);let best=0;
+  for(const r of [2,4,7]){
+   const ring=(grayAt(x-r,y)+grayAt(x+r,y)+grayAt(x,y-r)+grayAt(x,y+r)+grayAt(x-r,y-r)+grayAt(x+r,y+r)+grayAt(x-r,y+r)+grayAt(x+r,y-r))/8;
+   const edge=(Math.abs(grayAt(x-r,y)-grayAt(x+r,y))+Math.abs(grayAt(x,y-r)-grayAt(x,y+r)))/2;
+   best=Math.max(best,Math.max(0,z-ring)*.7+edge*.3);
+  }
+  if(best>threshold*.48&&z>.13)candidates.push({x,y,score:best});
  }
  candidates.sort((a,b)=>b.score-a.score);
- const found=[],cell=13,occupied=new Set();
+ const found=[],cell=8,occupied=new Map();
  for(const p of candidates){
-  const gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell),key=gy*10000+gx;
-  if(occupied.has(key))continue;
-  found.push(p);
-  for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)occupied.add((gy+oy)*10000+gx+ox);
-  if(found.length>=7000)break;
+  const gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell);let near=false;
+  for(let dy=-1;dy<=1&&!near;dy++)for(let dx=-1;dx<=1&&!near;dx++){
+   for(const q of occupied.get((gy+dy)*10000+gx+dx)||[])if((p.x-q.x)**2+(p.y-q.y)**2<64){near=true;break}
+  }
+  if(near)continue;
+  found.push(p);const k=gy*10000+gx;if(!occupied.has(k))occupied.set(k,[]);occupied.get(k).push(p);
+  if(found.length>=10000)break;
  }
  return found;
 }
