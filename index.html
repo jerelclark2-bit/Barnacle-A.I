@@ -171,7 +171,7 @@ function drawSensitivity(values){
 function drawBenchmarks(){
  const vals=[12.57,14.85],max=18,p=chartFrame("errorChart","Mean absolute error per 128px tile",max);
  vals.forEach((v,i)=>{const x=p.x0+80+i*220,h=v/max*p.plotH;p.ctx.fillStyle=i?"#ffcb84":"#5ee6bf";p.ctx.fillRect(x,p.y0-h,95,h);p.ctx.fillStyle="#eaf8f5";p.ctx.font="bold 19px system-ui";p.ctx.fillText(v.toFixed(2),x+16,p.y0-h-10);p.ctx.font="13px system-ui";p.ctx.fillText(i?"Ridge":"CNN",x+20,p.y0+21)});
- const loss=[1.387112,1.382534,1.37892,1.376305,1.365835,1.364534,1.3502,1.354985,1.374703,1.350609,1.371043,1.371043,1.364533,1.33918,1.332072,1.329823,1.319631,1.319767,1.314231,1.307049,1.309393,1.307286,1.32253,1.36752,1.309394,1.257501,1.242444,1.272802,1.269223,1.252232,1.229913,1.230939];
+ const loss=[1.387112,1.382534,1.378919,1.376305,1.365835,1.364534,1.350200,1.354985,1.374703,1.350609,1.371330,1.371043,1.364776,1.339180,1.332072,1.329823,1.319631,1.319767,1.314231,1.307048,1.307286,1.322530,1.367520,1.309394,1.319520,1.257501,1.242444,1.272802,1.269222,1.252231,1.229913,1.230939];
  const q=chartFrame("lossChart","Training loss · 32 epochs",1.5);q.ctx.beginPath();q.ctx.strokeStyle="#5ee6bf";q.ctx.lineWidth=3;
  loss.forEach((v,i)=>{const x=q.x0+i*q.plotW/(loss.length-1),y=q.y0-v/1.5*q.plotH;i?q.ctx.lineTo(x,y):q.ctx.moveTo(x,y)});q.ctx.stroke();
  q.ctx.fillStyle="#b0cbd1";q.ctx.font="12px system-ui";q.ctx.fillText("Epoch 1",q.x0,q.y0+20);q.ctx.fillText("Epoch 32",q.w-94,q.y0+20);
